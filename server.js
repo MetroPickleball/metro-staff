@@ -9,7 +9,7 @@ const dataDir=path.join(__dirname,'data'); if(!fs.existsSync(dataDir)) fs.mkdirS
 const db=new Database(path.join(dataDir,'metro.db')); db.pragma('journal_mode = WAL');
 db.exec(`
 CREATE TABLE IF NOT EXISTS employees(id TEXT PRIMARY KEY,name TEXT,role TEXT,color TEXT,init TEXT,
-  pin TEXT,must_set_pin INTEGER DEFAULT 0,groups TEXT DEFAULT '[]',active INTEGER DEFAULT 1);
+  pin TEXT,must_set_pin INTEGER DEFAULT 0,groups TEXT DEFAULT '[]',active INTEGER DEFAULT 1,responsibilities TEXT DEFAULT '');
 CREATE TABLE IF NOT EXISTS shifts(id TEXT PRIMARY KEY,name TEXT,hours TEXT,days TEXT,sort_order INTEGER);
 CREATE TABLE IF NOT EXISTS items(id TEXT PRIMARY KEY,label TEXT,kinds TEXT,cadence TEXT,
   scope_type TEXT,scope_values TEXT,goal REAL,high_priority INTEGER DEFAULT 0,text_label TEXT,
@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS checkins(id TEXT PRIMARY KEY,employee_id TEXT,date TE
 CREATE TABLE IF NOT EXISTS reports(id TEXT PRIMARY KEY,employee_id TEXT,date TEXT,category TEXT,
   message TEXT,status TEXT DEFAULT 'open',created_at TEXT DEFAULT (datetime('now')));
 `);
+try{db.exec("ALTER TABLE employees ADD COLUMN responsibilities TEXT DEFAULT ''");}catch(e){}
 const uid=()=>crypto.randomBytes(5).toString('hex');
 const J=(s,d)=>{try{return JSON.parse(s)}catch{return d===undefined?[]:d}};
 const todayISO=()=>new Date().toISOString().slice(0,10);
@@ -104,7 +105,7 @@ app.get('/api/staff/:id/today',(req,res)=>{ if(!staffOk(req.params.id,req.header
  const items=itemsFor(req.params.id,shift); const saved={},savedText={};
  db.prepare('SELECT item_id,value,text_value FROM daily_entries WHERE employee_id=? AND date=?').all(req.params.id,date)
    .forEach(r=>{saved[r.item_id]=r.value; if(r.text_value!=null) savedText[r.item_id]=r.text_value;});
- const emp=db.prepare('SELECT id,name,role,color,init FROM employees WHERE id=?').get(req.params.id);
+ const emp=db.prepare('SELECT id,name,role,color,init,responsibilities FROM employees WHERE id=?').get(req.params.id);
  res.json({emp,date,shift,items,saved,savedText});});
 app.post('/api/staff/:id/submit',(req,res)=>{const{pin,date,shift,values,texts,report,reportCategory}=req.body||{};
  if(!staffOk(req.params.id,pin)) return res.status(401).json({error:'PIN required'}); const d=date||todayISO();
@@ -133,7 +134,7 @@ function twoWeekHealth(empId){ const dates=lastDays(14);
  if(!parts.length) return {health:null,tasks:'—',goals:'—'};
  return {health:Math.round(100*parts.reduce((a,b)=>a+b,0)/parts.length), tasks:`${taskDone}/${taskTot}`, goals:gTot?`${gHit}/${gTot}`:'—'};}
 app.get('/api/manager/dashboard',requireManager,(q,res)=>{const today=todayISO();
- res.json(db.prepare('SELECT id,name,role,color,init,groups FROM employees WHERE active=1 ORDER BY name').all().map(e=>{
+ res.json(db.prepare('SELECT id,name,role,color,init,groups,responsibilities FROM employees WHERE active=1 ORDER BY name').all().map(e=>{
   const sub=db.prepare('SELECT COUNT(*) c FROM daily_entries WHERE employee_id=? AND date=?').get(e.id,today).c>0;
   return {...e,groups:J(e.groups),submittedToday:sub,...twoWeekHealth(e.id)};}));});
 app.get('/api/manager/groups',requireManager,(q,res)=>{const set=new Set();
@@ -186,8 +187,8 @@ app.post('/api/manager/employee/:id/checkins',requireManager,(req,res)=>{const b
 app.post('/api/manager/employees',requireManager,(req,res)=>{const b=req.body||{}; if(!b.name)return res.status(400).json({error:'name'});
  const id=(b.name.toLowerCase().replace(/[^a-z0-9]/g,'')||'emp')+crypto.randomBytes(2).toString('hex');
  const colors=['#00AEAE','#6366f1','#ec4899','#f97316','#8b5cf6','#14b8a6','#f43f5e','#0ea5e9','#84cc16','#06b6d4'];
- db.prepare('INSERT INTO employees(id,name,role,color,init,pin,must_set_pin,groups) VALUES(?,?,?,?,?,?,?,?)')
-  .run(id,b.name,b.role||'Staff',b.color||colors[Math.floor(Math.random()*colors.length)],b.name[0].toUpperCase(),'0000',1,JSON.stringify(b.groups||[]));
+ db.prepare('INSERT INTO employees(id,name,role,color,init,pin,must_set_pin,groups,responsibilities) VALUES(?,?,?,?,?,?,?,?,?)')
+  .run(id,b.name,b.role||'Staff',b.color||colors[Math.floor(Math.random()*colors.length)],b.name[0].toUpperCase(),'0000',1,JSON.stringify(b.groups||[]),b.responsibilities||'');
  if(b.copyFrom){ // duplicate personal (employee-scoped) items
   const src=db.prepare("SELECT * FROM items WHERE active=1 AND scope_type='employee'").all().filter(it=>J(it.scope_values).includes(b.copyFrom));
   const mx0=db.prepare('SELECT MAX(sort_order) m FROM items').get().m||0; let k=1;
@@ -195,10 +196,17 @@ app.post('/api/manager/employees',requireManager,(req,res)=>{const b=req.body||{
     .run(uid(),it.label,it.kinds,it.cadence,'employee',JSON.stringify([id]),it.goal,it.high_priority,it.text_label,mx0+(k++)));}
  res.json({ok:true,id});});
 app.put('/api/manager/employees/:id',requireManager,(req,res)=>{const b=req.body||{};const cur=db.prepare('SELECT * FROM employees WHERE id=?').get(req.params.id);if(!cur)return res.status(404).json({error:'no'});
- db.prepare('UPDATE employees SET name=?,role=?,groups=?,init=? WHERE id=?').run(b.name??cur.name,b.role??cur.role,JSON.stringify(b.groups||J(cur.groups)),(b.name||cur.name)[0].toUpperCase(),req.params.id);res.json({ok:true});});
+ db.prepare('UPDATE employees SET name=?,role=?,groups=?,init=?,responsibilities=? WHERE id=?').run(b.name??cur.name,b.role??cur.role,JSON.stringify(b.groups||J(cur.groups)),(b.name||cur.name)[0].toUpperCase(),b.responsibilities??cur.responsibilities,req.params.id);res.json({ok:true});});
 app.delete('/api/manager/employees/:id',requireManager,(q,res)=>{db.prepare('UPDATE employees SET active=0 WHERE id=?').run(q.params.id);res.json({ok:true});});
 app.post('/api/manager/employees/:id/resetpin',requireManager,(q,res)=>{db.prepare("UPDATE employees SET pin=NULL,must_set_pin=1 WHERE id=?").run(q.params.id);res.json({ok:true});});
 
+app.get('/api/manager/export/daily.csv',requireManager,(q,res)=>{
+ const rows=db.prepare(`SELECT de.date,e.name emp,de.shift,i.label item,de.value,de.text_value FROM daily_entries de JOIN employees e ON e.id=de.employee_id JOIN items i ON i.id=de.item_id ORDER BY de.date DESC,e.name`).all();
+ const esc=v=>{v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+ let csv='Date,Employee,Shift,Item,Value,Text\n';
+ rows.forEach(r=>{csv+=[r.date,r.emp,r.shift,r.item,r.value==null?'':r.value,r.text_value||''].map(esc).join(',')+'\n';});
+ res.setHeader('Content-Type','text/csv');res.setHeader('Content-Disposition','attachment; filename="metro-daily-'+todayISO()+'.csv"');res.send(csv);});
+app.get('/api/manager/export/db',requireManager,(q,res)=>res.download(path.join(dataDir,'metro.db'),'metro-backup-'+todayISO()+'.db'));
 app.get('/manager',(q,r)=>r.sendFile(path.join(__dirname,'public','manager.html')));
 app.get('/',(q,r)=>r.sendFile(path.join(__dirname,'public','staff.html')));
 app.listen(PORT,()=>console.log('Metro Staff System v3 on '+PORT));

@@ -71,8 +71,10 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
         <span class="lbl">Group(s)</span><div class="checks" id="e-groups" style="margin-bottom:10px"></div>
         <span class="lbl">Copy setup from (optional — duplicates title, groups &amp; personal tasks)</span>
         <select class="in" id="e-copy" onchange="dupeFrom()"><option value="">— none (blank) —</option></select>
+        <span class="lbl" style="margin-top:10px">Responsibilities (shown at the bottom of their staff check-in)</span><textarea class="in" id="e-resp" rows="3" placeholder="What this person is responsible for…"></textarea>
         <div style="margin-top:10px"><button class="btn" id="e-submit" onclick="saveEmp()">Add employee</button> <button class="btn ghost" id="e-cancel" onclick="cancelEmp()" style="display:none">Cancel</button> <span class="muted" id="e-note"></span></div>
       </div></div>
+    <div class="card"><div class="row" style="margin-bottom:0"><div class="h2" style="margin:0">Export &amp; backup</div><div><button class="btn ghost sm" onclick="exportCSV()">⬇ Data (CSV)</button> <button class="btn ghost sm" onclick="exportDB()">⬇ Full backup (.db)</button></div></div><div class="muted" style="margin-top:6px">CSV opens in Excel for deeper reporting. The .db is a complete backup of everything.</div></div>
     <div class="muted" style="margin:0 0 10px 4px">Health = tasks completed + goals hit over the last 2 weeks.</div>
     <div id="team-list"></div>
   </div>
@@ -110,6 +112,8 @@ const GET=u=>fetch(u,{headers:H()}).then(r=>r.json());
 async function doLogin(){MPIN=$('mpin').value.trim();const r=await fetch('/api/manager/dashboard',{headers:H()});if(r.status===401){$('loginerr').textContent='Wrong PIN.';return;}
   emps=await r.json();groups=await GET('/api/manager/groups');shifts=await GET('/api/shifts');items=await GET('/api/manager/items');
   $('login').style.display='none';$('app').style.display='block';renderTeam();buildRollSel();renderAdmin();$('rv-date').value=new Date().toISOString().slice(0,10);}
+function exportCSV(){window.open('/api/manager/export/daily.csv?pin='+encodeURIComponent(MPIN));}
+function exportDB(){window.open('/api/manager/export/db?pin='+encodeURIComponent(MPIN));}
 function mtab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.t===t));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));$('p-'+t).classList.add('active');}
 async function refreshEmps(){emps=await GET('/api/manager/dashboard');}
 function hColor(h){return h>=70?'var(--green)':h>=40?'var(--amber)':'var(--red)';}
@@ -117,13 +121,13 @@ function renderTeam(){$('team-list').innerHTML=emps.map(e=>`<div class="emp-card
 // employee CRUD
 function toggleEmpForm(){const f=$('emp-form');f.style.display=f.style.display==='none'?'block':'none';if(f.style.display==='block')empRefs();}
 function empRefs(){$('e-groups').innerHTML=groups.map(g=>`<div class="chk-opt" data-g="${g}" onclick="this.classList.toggle('on')">${g}</div>`).join('');$('e-copy').innerHTML='<option value="">— none (blank) —</option>'+emps.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('');}
-function dupeFrom(){const id=$('e-copy').value;if(!id)return;const e=emps.find(x=>x.id===id);$('e-role').value=e.role;document.querySelectorAll('#e-groups .chk-opt').forEach(el=>el.classList.toggle('on',e.groups.includes(el.dataset.g)));$('e-note').textContent=' — copied '+e.name+"'s title, groups & personal tasks";}
-function editEmp(id){const e=emps.find(x=>x.id===id);empEditingId=id;$('emp-form').style.display='block';empRefs();$('e-name').value=e.name;$('e-role').value=e.role;document.querySelectorAll('#e-groups .chk-opt').forEach(el=>el.classList.toggle('on',e.groups.includes(el.dataset.g)));$('e-submit').textContent='Save changes';$('e-cancel').style.display='inline-block';$('e-note').textContent=' — editing '+e.name;window.scrollTo(0,0);}
-async function saveEmp(){const name=$('e-name').value.trim();if(!name)return alert('Give them a name.');const role=$('e-role').value.trim()||'Staff';const gs=[...document.querySelectorAll('#e-groups .chk-opt.on')].map(x=>x.dataset.g);
-  if(empEditingId){await fetch('/api/manager/employees/'+empEditingId,{method:'PUT',headers:H(),body:JSON.stringify({name,role,groups:gs})});}
-  else{await fetch('/api/manager/employees',{method:'POST',headers:H(),body:JSON.stringify({name,role,groups:gs,copyFrom:$('e-copy').value||null})});}
+function dupeFrom(){const id=$('e-copy').value;if(!id)return;const e=emps.find(x=>x.id===id);$('e-role').value=e.role;$('e-resp').value=e.responsibilities||'';document.querySelectorAll('#e-groups .chk-opt').forEach(el=>el.classList.toggle('on',e.groups.includes(el.dataset.g)));$('e-note').textContent=' — copied '+e.name+"'s title, groups & personal tasks";}
+function editEmp(id){const e=emps.find(x=>x.id===id);empEditingId=id;$('emp-form').style.display='block';empRefs();$('e-name').value=e.name;$('e-role').value=e.role;$('e-resp').value=e.responsibilities||'';document.querySelectorAll('#e-groups .chk-opt').forEach(el=>el.classList.toggle('on',e.groups.includes(el.dataset.g)));$('e-submit').textContent='Save changes';$('e-cancel').style.display='inline-block';$('e-note').textContent=' — editing '+e.name;window.scrollTo(0,0);}
+async function saveEmp(){const name=$('e-name').value.trim();if(!name)return alert('Give them a name.');const role=$('e-role').value.trim()||'Staff';const gs=[...document.querySelectorAll('#e-groups .chk-opt.on')].map(x=>x.dataset.g);const resp=$('e-resp').value;
+  if(empEditingId){await fetch('/api/manager/employees/'+empEditingId,{method:'PUT',headers:H(),body:JSON.stringify({name,role,groups:gs,responsibilities:resp})});}
+  else{await fetch('/api/manager/employees',{method:'POST',headers:H(),body:JSON.stringify({name,role,groups:gs,responsibilities:resp,copyFrom:$('e-copy').value||null})});}
   cancelEmp();await refreshEmps();items=await GET('/api/manager/items');renderTeam();buildRollSel();}
-function cancelEmp(){empEditingId=null;$('e-name').value='';$('e-role').value='';$('e-copy').value='';$('e-submit').textContent='Add employee';$('e-cancel').style.display='none';$('e-note').textContent='';document.querySelectorAll('#e-groups .chk-opt.on').forEach(el=>el.classList.remove('on'));$('emp-form').style.display='none';}
+function cancelEmp(){empEditingId=null;$('e-name').value='';$('e-role').value='';$('e-resp').value='';$('e-copy').value='';$('e-submit').textContent='Add employee';$('e-cancel').style.display='none';$('e-note').textContent='';document.querySelectorAll('#e-groups .chk-opt.on').forEach(el=>el.classList.remove('on'));$('emp-form').style.display='none';}
 async function removeEmp(id){const e=emps.find(x=>x.id===id);if(!confirm('Remove '+e.name+'? Their history is kept — this hides them.'))return;await fetch('/api/manager/employees/'+id,{method:'DELETE',headers:H()});await refreshEmps();renderTeam();buildRollSel();}
 async function resetPin(id,name){if(!confirm('Reset '+name+"'s PIN? They will create a new one next time they log in."))return;await fetch('/api/manager/employees/'+id+'/resetpin',{method:'POST',headers:H()});alert(name+"'s PIN was reset. Next time they tap their name, they'll set a new PIN.");}
 // rollup

@@ -73,6 +73,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="today-badge" id="d-today"></div>
     <div class="shift-pick"><label>Which shift are you working today?</label><select id="d-shift" onchange="loadToday()"></select></div>
     <div id="sections"></div>
+    <div id="resp-box"></div>
     <div class="sec" style="--sc:var(--muted)"><div class="sec-t">📣 Report something to Nick (optional)</div>
       <textarea class="report-box" id="report" placeholder="Anything important? An issue, an idea, a heads-up…"></textarea></div>
     <button class="submit-btn" id="submit" onclick="submitDay()">Submit today ✓</button>
@@ -127,7 +128,7 @@ function renderSections(r){const g={shift:[],group:[],all:[],employee:[]};r.item
   const meta={shift:['🕑 My '+r.shift+' shift','var(--shift)'],group:['🎯 My team','var(--group)'],all:['👥 All staff','var(--all)'],employee:['⭐ Just me','var(--me)']};
   let html='';for(const k of ['shift','group','all','employee']){if(!g[k].length)continue;
     html+=`<div class="sec" style="--sc:${meta[k][1]}"><div class="sec-t">${meta[k][0]}</div>`+g[k].map(it=>itemRow(it,r.saved[it.id],r.savedText[it.id])).join('')+`</div>`;}
-  $('sections').innerHTML=html;}
+  $('sections').innerHTML=html;$('resp-box').innerHTML=(r.emp&&r.emp.responsibilities)?`<div class="sec" style="--sc:#94a3b8"><div class="sec-t">📋 My responsibilities</div><div style="font-size:14px;white-space:pre-wrap">${String(r.emp.responsibilities).replace(/</g,'&lt;')}</div></div>`:'';}
 async function submitDay(){const btn=$('submit');btn.disabled=true;btn.textContent='Saving…';
   const values={},texts={};
   document.querySelectorAll('[data-task]').forEach(el=>values[el.dataset.id]=el.classList.contains('done')?1:0);
