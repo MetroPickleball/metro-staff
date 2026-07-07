@@ -51,6 +51,9 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
 .tl{display:inline-flex;gap:4px;margin-left:6px}.tl span{width:16px;height:16px;border-radius:50%;border:2px solid #ddd;cursor:pointer}
 .tl .g{background:var(--green)}.tl .y{background:var(--amber)}.tl .r{background:var(--red)}.tl span.sel{outline:2px solid #333;outline-offset:1px}
 .filterbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.pvsec{border-left:4px solid var(--sc,#ccc);padding:6px 0 6px 10px;margin-bottom:10px}
+.pvhead{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
+.pvitem{padding:6px 0;border-bottom:1px solid #f1f5f9}.pvitem:last-child{border-bottom:none}
 </style></head><body>
 <div id="trend-tip" style="position:fixed;display:none;background:#1c2b3a;color:#fff;padding:6px 9px;border-radius:6px;font-size:12px;pointer-events:none;z-index:99"></div>
 <div id="login" class="login card">
@@ -81,6 +84,10 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
   <div class="panel" id="p-roll">
     <div class="row"><select class="in" id="roll-emp" style="max-width:260px" onchange="loadRoll()"></select><div><button class="period-btn active" id="pw" onclick="setPeriod('week')">Week</button> <button class="period-btn" id="pm" onclick="setPeriod('month')">Month</button></div></div>
     <div class="card"><div class="h2">This period</div><div class="sum" id="roll-sum"></div><div id="roll-texts"></div></div>
+    <div class="card"><div class="h2">👁 Preview their check-in</div>
+      <div class="muted" style="margin-bottom:8px">See what this person's screen looks like for a given shift (the full assigned list).</div>
+      <select class="in" id="pv-shift" style="max-width:220px;margin-bottom:10px" onchange="loadPreview()"></select>
+      <div id="pv-list"></div></div>
     <div class="card"><div class="h2">📈 Metric trend</div>
       <div class="row" style="margin-bottom:8px;justify-content:flex-start;gap:14px"><div class="period-switch"><button class="period-btn" data-per="daily" onclick="setTrendSpan('daily')">Daily</button><button class="period-btn active" data-per="weekly" onclick="setTrendSpan('weekly')">Weekly</button><button class="period-btn" data-per="monthly" onclick="setTrendSpan('monthly')">Monthly</button></div><button class="btn ghost sm" id="trend-mode" onclick="toggleTrendMode()">Show: Totals</button></div>
       <div class="muted" style="margin-bottom:8px">Hover a point for the numbers. "Avg per shift" divides counts by shifts worked.</div><div id="roll-trend"></div></div>
@@ -112,7 +119,7 @@ const $=id=>document.getElementById(id);const H=()=>({'x-manager-pin':MPIN,'Cont
 const GET=u=>fetch(u,{headers:H()}).then(r=>r.json());
 async function doLogin(){MPIN=$('mpin').value.trim();const r=await fetch('/api/manager/dashboard',{headers:H()});if(r.status===401){$('loginerr').textContent='Wrong PIN.';return;}
   emps=await r.json();groups=await GET('/api/manager/groups');shifts=await GET('/api/shifts');items=await GET('/api/manager/items');
-  $('login').style.display='none';$('app').style.display='block';renderTeam();buildRollSel();renderAdmin();$('rv-date').value=new Date().toISOString().slice(0,10);}
+  $('login').style.display='none';$('app').style.display='block';renderTeam();buildRollSel();renderAdmin();$('rv-date').value=new Date().toISOString().slice(0,10);$('pv-shift').innerHTML=shifts.map(s=>'<option>'+s.name+'</option>').join('');}
 function exportCSV(){window.open('/api/manager/export/daily.csv?pin='+encodeURIComponent(MPIN));}
 function exportDB(){window.open('/api/manager/export/db?pin='+encodeURIComponent(MPIN));}
 function mtab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.t===t));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));$('p-'+t).classList.add('active');}
@@ -140,7 +147,7 @@ async function loadRoll(){const id=$('roll-emp').value;if(!id)return;const r=awa
   const texts=[];r.items.forEach(it=>{const a=r.agg[it.id];if(a&&a.texts&&a.texts.length)texts.push('<b>'+it.label+':</b> '+a.texts.map(t=>t.text).join('; '));});
   $('roll-texts').innerHTML=texts.length?'<div class="muted" style="margin-top:8px">'+texts.join('<br>')+'</div>':'';
   $('rep-name').textContent=(emps.find(e=>e.id===id)||{}).name||'';
-  loadTrend();loadReports(id);loadReviews(id,r.items.filter(i=>i.kinds.includes('number')&&i.goal!=null));}
+  loadTrend();loadReports(id);loadReviews(id,r.items.filter(i=>i.kinds.includes('number')&&i.goal!=null));loadPreview();}
 // trend
 function setTrendSpan(s){trendSpan=s;document.querySelectorAll('#p-roll .period-btn[data-per]').forEach(b=>b.classList.toggle('active',b.dataset.per===s));loadTrend();}
 function toggleTrendMode(){trendMode=trendMode==='total'?'avg':'total';$('trend-mode').textContent=trendMode==='total'?'Show: Totals':'Show: Avg per shift';drawTrend();}
@@ -166,6 +173,14 @@ async function loadReviews(id,goalItems){revGoals=goalItems.map(g=>g.label);$('r
   const hist=await GET('/api/manager/employee/'+id+'/checkins');
   $('rev-history').innerHTML='<div class="muted" style="margin:10px 0 6px">History</div>'+(hist.length?hist.map(h=>{const lights=(h.ratings||[]).map(r=>r.goal+': <span class="tl"><span class="'+r.light+'" style="cursor:default"></span></span>').join(' &nbsp; ');return `<div class="rev"><div style="font-weight:700;font-size:13px">${h.date} · ${h.conductor}</div><div style="font-size:12px;margin:4px 0">${lights}</div><div style="font-size:13px">${h.notes||''}</div></div>`;}).join(''):'<div class="muted">No check-ins yet.</div>');}
 function pickTL(el){el.parentNode.querySelectorAll('span').forEach(s=>s.classList.remove('sel'));el.classList.add('sel');}
+async function loadPreview(){const id=$('roll-emp').value;if(!id)return;const shift=$('pv-shift').value||'Morning';const r=await GET('/api/manager/employee/'+id+'/preview?shift='+encodeURIComponent(shift));
+ const g={shift:[],group:[],all:[],employee:[]};r.items.forEach(it=>g[it.scope_type].push(it));
+ const meta={shift:['🕑 '+shift+' shift','var(--shift)'],group:['🎯 Their group','var(--group)'],all:['👥 All staff','var(--all)'],employee:['⭐ Just them','var(--me)']};
+ let html='';for(const k of ['shift','group','all','employee']){if(!g[k].length)continue;html+='<div class="pvsec" style="--sc:'+meta[k][1]+'"><div class="pvhead">'+meta[k][0]+'</div>'+g[k].map(pvRow).join('')+'</div>';}
+ if(r.emp.responsibilities)html+='<div class="pvsec" style="--sc:#94a3b8"><div class="pvhead">📋 Responsibilities</div><div style="font-size:14px;white-space:pre-wrap">'+r.emp.responsibilities.replace(/</g,'&lt;')+'</div></div>';
+ $('pv-list').innerHTML=html||'<div class="muted">Nothing assigned for this shift.</div>';}
+function pvRow(it){const pri=it.high_priority?'<span class="pri-chip">★ High</span> ':'';const types=it.kinds.map(k=>k==='task'?'☐ task':k==='number'?'# count':'✎ text').join(' + ');
+ return '<div class="pvitem"><div><b>'+pri+it.label+'</b></div><div class="muted" style="margin-top:2px">'+types+' · '+it.cadence+(it.completion==='shared'?' · shared':'')+'</div></div>';}
 async function addReview(){const ratings=[];document.querySelectorAll('#rv-goals .tl').forEach(tl=>{const sel=tl.querySelector('.sel');if(sel)ratings.push({goal:tl.dataset.goal,light:sel.classList.contains('g')?'g':sel.classList.contains('y')?'y':'r'});});
   await fetch('/api/manager/employee/'+$('roll-emp').value+'/checkins',{method:'POST',headers:H(),body:JSON.stringify({date:$('rv-date').value,conductor:$('rv-by').value,ratings,notes:$('rv-notes').value})});$('rv-notes').value='';loadRoll();}
 // admin (items)

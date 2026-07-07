@@ -213,6 +213,19 @@ app.put('/api/manager/employees/:id',requireManager,(req,res)=>{const b=req.body
 app.delete('/api/manager/employees/:id',requireManager,(q,res)=>{db.prepare('UPDATE employees SET active=0 WHERE id=?').run(q.params.id);res.json({ok:true});});
 app.post('/api/manager/employees/:id/resetpin',requireManager,(q,res)=>{db.prepare("UPDATE employees SET pin=NULL,must_set_pin=1 WHERE id=?").run(q.params.id);res.json({ok:true});});
 
+app.get('/api/manager/employee/:id/preview',requireManager,(req,res)=>{
+ const emp=db.prepare('SELECT id,name,role,color,init,groups,responsibilities FROM employees WHERE id=?').get(req.params.id);
+ if(!emp) return res.status(404).json({error:'no'});
+ const shift=req.query.shift||'Morning'; const groups=J(emp.groups);
+ const applies=(it)=>{const sv=J(it.scope_values);
+  if(it.scope_type==='all') return true;
+  if(it.scope_type==='group') return sv.some(g=>groups.includes(g));
+  if(it.scope_type==='shift') return sv.includes(shift);
+  if(it.scope_type==='employee') return sv.includes(emp.id);
+  return false;};
+ const items=db.prepare('SELECT * FROM items WHERE active=1 ORDER BY high_priority DESC,sort_order').all().filter(applies)
+   .map(it=>({...it,kinds:J(it.kinds),scope_values:J(it.scope_values),high_priority:!!it.high_priority}));
+ res.json({emp:{...emp,groups},shift,items});});
 app.get('/api/manager/export/daily.csv',requireManager,(q,res)=>{
  const rows=db.prepare(`SELECT de.date,e.name emp,de.shift,i.label item,de.value,de.text_value FROM daily_entries de JOIN employees e ON e.id=de.employee_id JOIN items i ON i.id=de.item_id ORDER BY de.date DESC,e.name`).all();
  const esc=v=>{v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
