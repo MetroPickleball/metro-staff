@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS employees(id TEXT PRIMARY KEY,name TEXT,role TEXT,col
 CREATE TABLE IF NOT EXISTS shifts(id TEXT PRIMARY KEY,name TEXT,hours TEXT,days TEXT,sort_order INTEGER);
 CREATE TABLE IF NOT EXISTS items(id TEXT PRIMARY KEY,label TEXT,kinds TEXT,cadence TEXT,
   scope_type TEXT,scope_values TEXT,goal REAL,high_priority INTEGER DEFAULT 0,text_label TEXT,
-  sort_order INTEGER,active INTEGER DEFAULT 1);
+  sort_order INTEGER,active INTEGER DEFAULT 1,completion TEXT DEFAULT 'each');
 CREATE TABLE IF NOT EXISTS daily_entries(employee_id TEXT,date TEXT,shift TEXT,item_id TEXT,
   value REAL,text_value TEXT,PRIMARY KEY(employee_id,date,item_id));
 CREATE TABLE IF NOT EXISTS onetime_done(employee_id TEXT,item_id TEXT,done_date TEXT,
@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS reports(id TEXT PRIMARY KEY,employee_id TEXT,date TEX
   message TEXT,status TEXT DEFAULT 'open',created_at TEXT DEFAULT (datetime('now')));
 `);
 try{db.exec("ALTER TABLE employees ADD COLUMN responsibilities TEXT DEFAULT ''");}catch(e){}
+try{db.exec("ALTER TABLE items ADD COLUMN completion TEXT DEFAULT 'each'");}catch(e){}
 const uid=()=>crypto.randomBytes(5).toString('hex');
 const J=(s,d)=>{try{return JSON.parse(s)}catch{return d===undefined?[]:d}};
 const todayISO=()=>new Date().toISOString().slice(0,10);
@@ -70,18 +71,30 @@ if(db.prepare('SELECT COUNT(*) c FROM employees').get().c===0){
 }
 
 // ---- merge engine ----
-function itemsFor(empId,shiftName){
+function taskDone(it,empId,today){
+ const shared=it.completion==='shared';
+ if(it.cadence==='onetime'){
+  return shared ? !!db.prepare('SELECT 1 FROM onetime_done WHERE item_id=? LIMIT 1').get(it.id)
+                : !!db.prepare('SELECT 1 FROM onetime_done WHERE item_id=? AND employee_id=?').get(it.id,empId);
+ }
+ const dates = it.cadence==='weekly' ? weekDates(today) : [today];
+ const inC=dates.map(()=>'?').join(',');
+ return shared ? !!db.prepare(`SELECT 1 FROM daily_entries WHERE item_id=? AND value>=1 AND date IN (${inC}) LIMIT 1`).get(it.id,...dates)
+               : !!db.prepare(`SELECT 1 FROM daily_entries WHERE item_id=? AND employee_id=? AND value>=1 AND date IN (${inC}) LIMIT 1`).get(it.id,empId,...dates);
+}
+function itemsFor(empId,shiftName,date){
  const emp=db.prepare('SELECT * FROM employees WHERE id=?').get(empId); if(!emp) return [];
- const groups=J(emp.groups);
- const done=new Set(db.prepare('SELECT item_id FROM onetime_done WHERE employee_id=?').all(empId).map(r=>r.item_id));
- return db.prepare('SELECT * FROM items WHERE active=1 ORDER BY high_priority DESC, sort_order').all().filter(it=>{
-  if(it.cadence==='onetime'&&done.has(it.id)) return false;
-  const sv=J(it.scope_values);
+ const groups=J(emp.groups); const today=date||todayISO();
+ const applies=(it)=>{const sv=J(it.scope_values);
   if(it.scope_type==='all') return true;
   if(it.scope_type==='group') return sv.some(g=>groups.includes(g));
   if(it.scope_type==='shift') return sv.includes(shiftName);
   if(it.scope_type==='employee') return sv.includes(empId);
-  return false;
+  return false;};
+ return db.prepare('SELECT * FROM items WHERE active=1 ORDER BY high_priority DESC, sort_order').all().filter(it=>{
+  if(!applies(it)) return false;
+  if(J(it.kinds).includes('task') && taskDone(it,empId,today)) return false;
+  return true;
  }).map(it=>({...it,kinds:J(it.kinds),scope_values:J(it.scope_values),high_priority:!!it.high_priority}));
 }
 function requireManager(req,res,next){ if((req.headers['x-manager-pin']||req.query.pin)===MANAGER_PIN) return next(); res.status(401).json({error:'Manager PIN required'});}
@@ -102,7 +115,7 @@ app.post('/api/staff/:id/setpin',(req,res)=>{const{currentPin,newPin}=req.body||
  db.prepare('UPDATE employees SET pin=?,must_set_pin=0 WHERE id=?').run(String(newPin),req.params.id); res.json({ok:true});});
 app.get('/api/staff/:id/today',(req,res)=>{ if(!staffOk(req.params.id,req.headers['x-staff-pin'])) return res.status(401).json({error:'PIN required'});
  const shift=req.query.shift||'Morning', date=req.query.date||todayISO();
- const items=itemsFor(req.params.id,shift); const saved={},savedText={};
+ const items=itemsFor(req.params.id,shift,date); const saved={},savedText={};
  db.prepare('SELECT item_id,value,text_value FROM daily_entries WHERE employee_id=? AND date=?').all(req.params.id,date)
    .forEach(r=>{saved[r.item_id]=r.value; if(r.text_value!=null) savedText[r.item_id]=r.text_value;});
  const emp=db.prepare('SELECT id,name,role,color,init,responsibilities FROM employees WHERE id=?').get(req.params.id);
@@ -168,12 +181,12 @@ app.get('/api/manager/employee/:id/trend',requireManager,(req,res)=>{const span=
 app.get('/api/manager/items',requireManager,(q,res)=>res.json(db.prepare('SELECT * FROM items ORDER BY active DESC,high_priority DESC,sort_order').all().map(it=>({...it,kinds:J(it.kinds),scope_values:J(it.scope_values),high_priority:!!it.high_priority}))));
 app.post('/api/manager/items',requireManager,(req,res)=>{const b=req.body||{}; if(!b.label)return res.status(400).json({error:'label'});
  const mx=db.prepare('SELECT MAX(sort_order) m FROM items').get().m||0; const id=uid();
- db.prepare('INSERT INTO items(id,label,kinds,cadence,scope_type,scope_values,goal,high_priority,text_label,sort_order) VALUES(?,?,?,?,?,?,?,?,?,?)')
-  .run(id,b.label,JSON.stringify(b.kinds||['task']),b.cadence||'daily',b.scope_type||'all',JSON.stringify(b.scope_values||[]),b.goal??null,b.high_priority?1:0,b.text_label||null,mx+1);
+ db.prepare('INSERT INTO items(id,label,kinds,cadence,scope_type,scope_values,goal,high_priority,text_label,sort_order,completion) VALUES(?,?,?,?,?,?,?,?,?,?,?)')
+  .run(id,b.label,JSON.stringify(b.kinds||['task']),b.cadence||'daily',b.scope_type||'all',JSON.stringify(b.scope_values||[]),b.goal??null,b.high_priority?1:0,b.text_label||null,mx+1,b.completion||'each');
  res.json({ok:true,id});});
 app.put('/api/manager/items/:iid',requireManager,(req,res)=>{const cur=db.prepare('SELECT * FROM items WHERE id=?').get(req.params.iid); if(!cur)return res.status(404).json({error:'no'});
- const b=req.body||{}; db.prepare('UPDATE items SET label=?,kinds=?,cadence=?,scope_type=?,scope_values=?,goal=?,high_priority=?,text_label=?,active=? WHERE id=?')
-  .run(b.label??cur.label,JSON.stringify(b.kinds||J(cur.kinds)),b.cadence??cur.cadence,b.scope_type??cur.scope_type,JSON.stringify(b.scope_values||J(cur.scope_values)),b.goal===undefined?cur.goal:b.goal,(b.high_priority!==undefined?(b.high_priority?1:0):cur.high_priority),b.text_label===undefined?cur.text_label:b.text_label,(b.active!==undefined?(b.active?1:0):cur.active),req.params.iid);
+ const b=req.body||{}; db.prepare('UPDATE items SET label=?,kinds=?,cadence=?,scope_type=?,scope_values=?,goal=?,high_priority=?,text_label=?,active=?,completion=? WHERE id=?')
+  .run(b.label??cur.label,JSON.stringify(b.kinds||J(cur.kinds)),b.cadence??cur.cadence,b.scope_type??cur.scope_type,JSON.stringify(b.scope_values||J(cur.scope_values)),b.goal===undefined?cur.goal:b.goal,(b.high_priority!==undefined?(b.high_priority?1:0):cur.high_priority),b.text_label===undefined?cur.text_label:b.text_label,(b.active!==undefined?(b.active?1:0):cur.active),b.completion??cur.completion,req.params.iid);
  res.json({ok:true});});
 app.delete('/api/manager/items/:iid',requireManager,(q,res)=>{db.prepare('UPDATE items SET active=0 WHERE id=?').run(q.params.iid);res.json({ok:true});});
 // reports + checkins
