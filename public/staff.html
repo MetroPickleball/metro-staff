@@ -1,0 +1,140 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metro Pickleball — Staff Portal</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--teal:#00AEAE;--teal-d:#007F7F;--teal-l:#e0f7f7;--dark:#1C2B3A;--text:#1a2332;--muted:#64748b;--bg:#f0f4f8;--card:#fff;--border:#e2e8f0;--green:#10b981;
+--shift:#6366f1;--group:#0ea5e9;--all:#f59e0b;--me:#ec4899}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:var(--dark);padding:14px 20px;text-align:center}
+.logo{background:var(--teal);color:#fff;font-weight:900;font-size:11px;padding:7px 11px;border-radius:7px;line-height:1.3;display:inline-block;margin-bottom:6px}
+.header-title{color:#e2e8f0;font-weight:700;font-size:16px}.header-sub{color:#94a3b8;font-size:12px;margin-top:2px}
+.wrap{max-width:520px;margin:0 auto;padding:20px}
+.screen{display:none}.screen.active{display:block}
+.select-title{font-size:21px;font-weight:800;text-align:center;margin-bottom:4px}
+.select-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px}
+.emp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.emp-card{background:var(--card);border-radius:12px;padding:16px 12px;cursor:pointer;border:2px solid transparent;box-shadow:0 1px 4px rgba(0,0,0,.07);display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;position:relative;overflow:hidden;transition:transform .15s,border-color .15s}
+.emp-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--c,var(--teal))}
+.emp-card:hover{border-color:var(--c,var(--teal));transform:translateY(-2px)}
+.emp-av{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff}
+.emp-n{font-weight:700;font-size:14px}.emp-r{font-size:11px;color:var(--muted)}
+.back-btn{color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;padding:0;margin-bottom:14px}
+.pin-inner{max-width:320px;margin:10px auto;text-align:center}
+.pin-emp{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:14px}
+.pin-title{font-size:16px;font-weight:800}
+.pin-dots{display:flex;gap:12px;justify-content:center;margin:18px 0}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--teal)}.pin-dot.filled{background:var(--teal)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto}
+.key{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:20px;font-weight:700;cursor:pointer;text-align:center}
+.key:hover{border-color:var(--teal)}.key.wide{font-size:14px;color:var(--muted)}
+.err{color:#dc2626;font-size:12px;margin-top:10px;min-height:16px}
+.emp-head{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.today-badge{background:var(--teal-l);color:var(--teal-d);padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;display:inline-block;margin-bottom:14px}
+.shift-pick{background:var(--card);border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.shift-pick label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:8px}
+.shift-pick select{width:100%;padding:11px 12px;border:2px solid var(--border);border-radius:9px;font-size:15px;font-family:inherit;background:#fff}
+.sec{background:var(--card);border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:4px solid var(--sc,#ccc)}
+.sec-t{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.itemwrap{padding:9px 0;border-bottom:1px solid #f1f5f9}.itemwrap:last-child{border-bottom:none}
+.sitem{display:flex;align-items:center;gap:10px}
+.sitem.task{cursor:pointer}
+.ck{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800}
+.sitem.task.done .ck{background:var(--green);border-color:var(--green)}.sitem.task.done .ilabel{text-decoration:line-through;color:var(--muted)}
+.ilabel{font-size:14px;flex:1}.igoal{font-size:11px;color:var(--muted)}
+.pri-flag{font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px;background:var(--green);color:#fff;margin-right:4px}
+.badge{font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;background:#e0e7ff;color:#3730a3;margin-right:4px}
+.numin{width:74px;padding:8px;border:2px solid var(--border);border-radius:8px;font-size:15px;text-align:center;font-family:inherit;-moz-appearance:textfield}
+.numin:focus{outline:none;border-color:var(--teal)}.numin::-webkit-outer-spin-button,.numin::-webkit-inner-spin-button{-webkit-appearance:none}
+.txtin{width:100%;padding:8px;border:2px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;margin-top:8px}
+.report-box{width:100%;min-height:70px;padding:11px;border:2px solid var(--border);border-radius:9px;font-size:14px;font-family:inherit;resize:vertical}
+.submit-btn{width:100%;padding:15px;background:var(--teal);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer}
+.submit-btn:hover{background:var(--teal-d)}.submit-btn:disabled{background:#94a3b8}
+.success-inner{max-width:400px;margin:50px auto;text-align:center}
+.success-icon{font-size:60px;margin-bottom:16px}.success-title{font-size:23px;font-weight:800;margin-bottom:8px}
+.success-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px}
+.another-btn{background:var(--card);border:2px solid var(--border);color:var(--text);padding:11px 22px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.loading{text-align:center;padding:60px 20px;color:var(--muted)}
+.card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+</style></head><body>
+<header class="header"><div class="logo">METRO<br>PICKLEBALL</div><div class="header-title">Staff Portal</div><div class="header-sub">Daily check-in</div></header>
+<div class="wrap">
+  <div class="screen active" id="s-load"><div class="loading">Loading…</div></div>
+  <div class="screen" id="s-select"><div class="select-title">Who are you?</div><div class="select-sub">Tap your name, then enter your PIN.</div><div class="emp-grid" id="emp-grid"></div></div>
+  <div class="screen" id="s-pin"><div class="pin-inner">
+    <button class="back-btn" onclick="show('s-select')">← Back</button>
+    <div class="pin-emp"><div class="emp-av" id="pin-av"></div><div class="pin-title" id="pin-name"></div></div>
+    <div id="pin-prompt" style="font-size:13px;color:var(--muted)">Enter your PIN</div>
+    <div class="pin-dots" id="pin-dots"></div><div class="keypad" id="keypad"></div>
+    <div class="err" id="pin-err"></div>
+    <button class="submit-btn" id="pin-save" style="display:none;margin-top:14px" onclick="saveNewPin()">Save my PIN</button>
+  </div></div>
+  <div class="screen" id="s-daily">
+    <button class="back-btn" onclick="show('s-select')">← Back</button>
+    <div class="emp-head"><div class="emp-av" id="d-av"></div><div><div style="font-weight:800;font-size:17px" id="d-name"></div><div style="font-size:12px;color:var(--muted)" id="d-role"></div></div></div>
+    <div class="today-badge" id="d-today"></div>
+    <div class="shift-pick"><label>Which shift are you working today?</label><select id="d-shift" onchange="loadToday()"></select></div>
+    <div id="sections"></div>
+    <div class="sec" style="--sc:var(--muted)"><div class="sec-t">📣 Report something to Nick (optional)</div>
+      <textarea class="report-box" id="report" placeholder="Anything important? An issue, an idea, a heads-up…"></textarea></div>
+    <button class="submit-btn" id="submit" onclick="submitDay()">Submit today ✓</button>
+  </div>
+  <div class="screen" id="s-success"><div class="success-inner"><div class="success-icon">🎉</div><div class="success-title">Today's check-in saved!</div>
+    <div class="success-sub">Nice work, <span id="suc-name"></span>. Nick sees your numbers roll up by week and month.</div>
+    <button class="another-btn" onclick="show('s-select')">← Back to names</button></div></div>
+</div>
+<script>
+let roster=[],shifts=[],sel=null,pin='',mode='enter',cur=null;
+const $=id=>document.getElementById(id);
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');}
+function todayISO(){return new Date().toISOString().slice(0,10);}
+function prettyToday(){return new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});}
+async function init(){try{
+  roster=await (await fetch('/api/staff/roster')).json();
+  shifts=await (await fetch('/api/shifts')).json();
+  $('emp-grid').innerHTML=roster.map(e=>`<div class="emp-card" style="--c:${e.color}" onclick="pick('${e.id}')"><div class="emp-av" style="background:${e.color}">${e.init}</div><div><div class="emp-n">${e.name}</div><div class="emp-r">${e.role}</div></div></div>`).join('');
+  show('s-select');
+ }catch(e){$('s-load').innerHTML='<div class="loading">⚠️ Could not connect. Refresh to try again.</div>';}}
+async function pick(id){sel=roster.find(e=>e.id===id);pin='';$('pin-av').style.background=sel.color;$('pin-av').textContent=sel.init;$('pin-name').textContent=sel.name;$('pin-err').textContent='';
+  let st={mustSetPin:false};try{st=await (await fetch('/api/staff/'+sel.id+'/status')).json();}catch(e){}
+  if(st.mustSetPin){mode='set';$('pin-prompt').textContent='Create a new 4-digit PIN';$('pin-save').style.display='block';}
+  else{mode='enter';$('pin-prompt').textContent='Enter your PIN';$('pin-save').style.display='none';}
+  dots();show('s-pin');}
+function dots(){$('pin-dots').innerHTML=[0,1,2,3].map(i=>`<div class="pin-dot ${i<pin.length?'filled':''}"></div>`).join('');}
+function keypad(){$('keypad').innerHTML=[1,2,3,4,5,6,7,8,9,'←',0,'OK'].map(k=>`<div class="key ${(k==='←'||k==='OK')?'wide':''}" onclick="press('${k}')">${k}</div>`).join('');}
+function press(k){if(k==='←')pin=pin.slice(0,-1);else if(k==='OK'){go();return;}else if(pin.length<4)pin+=k;dots();if(pin.length===4&&mode==='enter')go();}
+function go(){if(mode==='set'){saveNewPin();}else{tryLogin();}}
+async function tryLogin(){if(pin.length<4)return;const r=await (await fetch('/api/staff/'+sel.id+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin})})).json();
+  if(!r.ok){$('pin-err').textContent='That PIN did not match. Try again.';pin='';dots();return;}openDaily();}
+async function saveNewPin(){if(pin.length<4){$('pin-err').textContent='Enter 4 digits.';return;}
+  const r=await (await fetch('/api/staff/'+sel.id+'/setpin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({newPin:pin})})).json();
+  if(!r.ok){$('pin-err').textContent=r.error||'Could not save PIN.';return;}openDaily();}
+function openDaily(){$('d-av').style.background=sel.color;$('d-av').textContent=sel.init;$('d-name').textContent=sel.name;$('d-role').textContent=sel.role;
+  $('d-today').textContent='Today · '+prettyToday();$('suc-name').textContent=sel.name;
+  $('d-shift').innerHTML=shifts.map(s=>`<option value="${s.name}">${s.name} (${s.hours})</option>`).join('');loadToday();show('s-daily');}
+async function loadToday(){const shift=$('d-shift').value||shifts[0].name;
+  const r=await (await fetch('/api/staff/'+sel.id+'/today?shift='+encodeURIComponent(shift)+'&date='+todayISO(),{headers:{'x-staff-pin':pin}})).json();
+  cur=r;renderSections(r);}
+function esc(s){return String(s).replace(/"/g,'&quot;');}
+function itemRow(it,sv,st){
+  const pri=it.high_priority?'<span class="pri-flag">★ High</span> ':'';
+  const one=it.cadence==='onetime'?'<span class="badge">one-time</span> ':'';
+  const isTask=it.kinds.includes('task'),isNum=it.kinds.includes('number'),isText=it.kinds.includes('text');
+  let main;
+  if(isTask){const done=sv==1?'done':'';main=`<div class="sitem task ${done}" data-id="${it.id}" data-task="1" onclick="this.classList.toggle('done')"><div class="ck">✓</div><div class="ilabel">${pri}${one}${it.label}</div></div>`;}
+  else{const goal=it.goal!=null?` <span class="igoal">(goal ${it.goal})</span>`:'';const ctl=isNum?`<input class="numin" type="number" inputmode="numeric" min="0" data-id="${it.id}" data-num="1" value="${sv!=null&&sv!==''?sv:''}" placeholder="0">`:'';main=`<div class="sitem"><div class="ilabel">${pri}${one}${it.label}${goal}</div>${ctl}</div>`;}
+  const extra=isText?`<input class="txtin" data-id="${it.id}" data-text="1" placeholder="${esc(it.text_label||'Type here…')}" value="${esc(st||'')}">`:'';
+  return `<div class="itemwrap">${main}${extra}</div>`;}
+function renderSections(r){const g={shift:[],group:[],all:[],employee:[]};r.items.forEach(it=>g[it.scope_type].push(it));
+  const meta={shift:['🕑 My '+r.shift+' shift','var(--shift)'],group:['🎯 My team','var(--group)'],all:['👥 All staff','var(--all)'],employee:['⭐ Just me','var(--me)']};
+  let html='';for(const k of ['shift','group','all','employee']){if(!g[k].length)continue;
+    html+=`<div class="sec" style="--sc:${meta[k][1]}"><div class="sec-t">${meta[k][0]}</div>`+g[k].map(it=>itemRow(it,r.saved[it.id],r.savedText[it.id])).join('')+`</div>`;}
+  $('sections').innerHTML=html;}
+async function submitDay(){const btn=$('submit');btn.disabled=true;btn.textContent='Saving…';
+  const values={},texts={};
+  document.querySelectorAll('[data-task]').forEach(el=>values[el.dataset.id]=el.classList.contains('done')?1:0);
+  document.querySelectorAll('[data-num]').forEach(el=>{if(el.value!=='')values[el.dataset.id]=Number(el.value);});
+  document.querySelectorAll('[data-text]').forEach(el=>{if(el.value!=='')texts[el.dataset.id]=el.value;});
+  try{const r=await (await fetch('/api/staff/'+sel.id+'/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin,date:todayISO(),shift:$('d-shift').value,values,texts,report:$('report').value})})).json();
+   if(!r.ok)throw 0;$('report').value='';show('s-success');
+  }catch{btn.disabled=false;btn.textContent='Submit today ✓';alert('Could not save. Check your connection and try again.');}}
+keypad();init();
+</script></body></html>

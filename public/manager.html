@@ -1,0 +1,187 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metro Pickleball — Manager Dashboard</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--teal:#00AEAE;--teal-d:#007F7F;--teal-l:#e0f7f7;--dark:#1C2B3A;--text:#1a2332;--muted:#64748b;--bg:#f0f4f8;--card:#fff;--border:#e2e8f0;--green:#10b981;--amber:#f59e0b;--red:#dc2626;--grey:#94a3b8;
+--shift:#6366f1;--group:#0ea5e9;--all:#f59e0b;--me:#ec4899}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text)}
+.header{background:var(--dark);padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
+.logo{background:var(--teal);color:#fff;font-weight:900;font-size:11px;padding:6px 10px;border-radius:6px;line-height:1.2}
+.htitle{color:#e2e8f0;font-weight:700;font-size:15px}
+.tabs{display:flex;gap:4px;background:var(--dark);padding:0 12px 10px;flex-wrap:wrap}
+.tab{background:#2b3f52;color:#cbd5e1;border:none;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer}
+.tab.active{background:var(--teal);color:#fff}
+.wrap{max-width:920px;margin:0 auto;padding:20px}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:14px}
+.grid{display:grid;gap:12px}
+.emp-card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:4px solid var(--c);margin-bottom:10px}
+.eh{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;flex-shrink:0}
+.en{font-weight:700;font-size:14px}.er{font-size:11px;color:var(--muted)}
+.healthbar{height:12px;border-radius:6px;background:#eef2f6;overflow:hidden}.healthfill{height:100%;border-radius:6px}
+.hstat{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
+.dot{width:9px;height:9px;border-radius:50%;margin-left:auto}.dot.y{background:var(--green)}.dot.n{background:var(--border)}
+.login{max-width:320px;margin:80px auto;text-align:center}
+.in,select.in{width:100%;padding:9px 11px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff}
+.in:focus{outline:none;border-color:var(--teal)}
+.btn{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer}
+.btn:hover{background:var(--teal-d)}.btn.sm{padding:5px 10px;font-size:11px}.btn.ghost{background:#fff;border:2px solid var(--border);color:var(--text)}
+.btn.ghost.on{background:var(--teal);color:#fff;border-color:var(--teal)}.btn.red{background:#fee2e2;color:var(--red)}
+.row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.h2{font-size:16px;font-weight:800}.muted{color:var(--muted);font-size:12px}
+.period-switch{display:inline-flex;gap:6px}
+.period-btn{background:#fff;border:2px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.period-btn.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:8px}
+.sumc{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:12px}
+.sumv{font-size:22px;font-weight:800}.suml{font-size:11px;color:var(--muted)}.sg{font-size:11px;font-weight:700;margin-top:4px}.ok{color:var(--green)}.under{color:var(--red)}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;text-align:center;border-bottom:1px solid #f1f5f9}th{color:var(--muted);font-size:10px;text-transform:uppercase}td:first-child,th:first-child{text-align:left;font-weight:700}.tot{font-weight:800;color:var(--teal-d)}
+.chip{font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px;color:#fff;margin-right:4px}
+.c-all{background:var(--all)}.c-group{background:var(--group)}.c-shift{background:var(--shift)}.c-employee{background:var(--me)}
+.type-chip{font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;background:#eef2f6;color:#475569;margin-right:4px}
+.pri-chip{font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px;background:var(--green);color:#fff}
+.item-row{display:flex;align-items:stretch;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9}.item-row:last-child{border-bottom:none}
+.pribar{width:4px;border-radius:3px;background:var(--green)}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.chk-opt{display:flex;align-items:center;gap:5px;font-size:13px;background:#f1f5f9;padding:6px 10px;border-radius:8px;cursor:pointer;border:2px solid transparent}
+.chk-opt.on{border-color:var(--teal);background:var(--teal-l)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.lbl{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px}
+.rev{border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
+.tl{display:inline-flex;gap:4px;margin-left:6px}.tl span{width:16px;height:16px;border-radius:50%;border:2px solid #ddd;cursor:pointer}
+.tl .g{background:var(--green)}.tl .y{background:var(--amber)}.tl .r{background:var(--red)}.tl span.sel{outline:2px solid #333;outline-offset:1px}
+.filterbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+</style></head><body>
+<div id="trend-tip" style="position:fixed;display:none;background:#1c2b3a;color:#fff;padding:6px 9px;border-radius:6px;font-size:12px;pointer-events:none;z-index:99"></div>
+<div id="login" class="login card">
+  <div class="logo" style="display:inline-block;margin-bottom:12px">METRO</div>
+  <h2 style="margin-bottom:6px">Manager Login</h2><p class="muted" style="margin-bottom:14px">Enter the manager PIN.</p>
+  <input class="in" id="mpin" type="password" placeholder="PIN" onkeydown="if(event.key==='Enter')doLogin()">
+  <div class="muted" id="loginerr" style="color:var(--red);margin:8px 0"></div>
+  <button class="btn" style="width:100%;margin-top:6px" onclick="doLogin()">Log in</button>
+</div>
+<div id="app" style="display:none">
+<div class="header"><div style="display:flex;align-items:center;gap:12px"><div class="logo">METRO</div><div class="htitle">Manager Dashboard</div></div><button class="btn ghost sm" onclick="location.reload()">↻ Refresh</button></div>
+<div class="tabs"><button class="tab active" data-t="team" onclick="mtab('team')">Team</button><button class="tab" data-t="roll" onclick="mtab('roll')">Rollup</button><button class="tab" data-t="admin" onclick="mtab('admin')">Tasks &amp; Metrics</button></div>
+<div class="wrap">
+  <div class="panel active" id="p-team">
+    <div class="card"><div class="row" style="margin-bottom:0"><div class="h2" style="margin:0">People</div><button class="btn sm" onclick="toggleEmpForm()">+ Add employee</button></div>
+      <div id="emp-form" style="display:none;border-top:1px solid var(--border);padding-top:12px;margin-top:10px">
+        <div class="fg"><div><span class="lbl">Name</span><input class="in" id="e-name" placeholder="e.g. Dan"></div><div><span class="lbl">Job title</span><input class="in" id="e-role" placeholder="e.g. Front Desk"></div></div>
+        <span class="lbl">Group(s)</span><div class="checks" id="e-groups" style="margin-bottom:10px"></div>
+        <span class="lbl">Copy setup from (optional — duplicates title, groups &amp; personal tasks)</span>
+        <select class="in" id="e-copy" onchange="dupeFrom()"><option value="">— none (blank) —</option></select>
+        <div style="margin-top:10px"><button class="btn" id="e-submit" onclick="saveEmp()">Add employee</button> <button class="btn ghost" id="e-cancel" onclick="cancelEmp()" style="display:none">Cancel</button> <span class="muted" id="e-note"></span></div>
+      </div></div>
+    <div class="muted" style="margin:0 0 10px 4px">Health = tasks completed + goals hit over the last 2 weeks.</div>
+    <div id="team-list"></div>
+  </div>
+  <div class="panel" id="p-roll">
+    <div class="row"><select class="in" id="roll-emp" style="max-width:260px" onchange="loadRoll()"></select><div><button class="period-btn active" id="pw" onclick="setPeriod('week')">Week</button> <button class="period-btn" id="pm" onclick="setPeriod('month')">Month</button></div></div>
+    <div class="card"><div class="h2">This period</div><div class="sum" id="roll-sum"></div><div id="roll-texts"></div></div>
+    <div class="card"><div class="h2">📈 Metric trend</div>
+      <div class="row" style="margin-bottom:8px;justify-content:flex-start;gap:14px"><div class="period-switch"><button class="period-btn" data-per="daily" onclick="setTrendSpan('daily')">Daily</button><button class="period-btn active" data-per="weekly" onclick="setTrendSpan('weekly')">Weekly</button><button class="period-btn" data-per="monthly" onclick="setTrendSpan('monthly')">Monthly</button></div><button class="btn ghost sm" id="trend-mode" onclick="toggleTrendMode()">Show: Totals</button></div>
+      <div class="muted" style="margin-bottom:8px">Hover a point for the numbers. "Avg per shift" divides counts by shifts worked.</div><div id="roll-trend"></div></div>
+    <div class="card"><div class="h2">📣 Reports from <span id="rep-name"></span></div><div id="roll-reports"></div></div>
+    <div class="card"><div class="h2">📝 Reviews &amp; check-ins</div>
+      <div class="rev" style="background:#f8fafc"><div class="fg"><div><span class="lbl">Date</span><input class="in" type="date" id="rv-date"></div><div><span class="lbl">Conducted by</span><select class="in" id="rv-by"><option>Nick</option><option>Brayden</option></select></div></div>
+        <div id="rv-goals"></div><span class="lbl" style="margin-top:8px">Notes</span><textarea class="in" id="rv-notes" rows="2" placeholder="How are they doing, follow-ups…"></textarea>
+        <button class="btn" style="margin-top:10px" onclick="addReview()">Save check-in</button></div>
+      <div id="rev-history"></div></div>
+  </div>
+  <div class="panel" id="p-admin">
+    <div class="card"><div class="h2">Add / edit a task or metric</div>
+      <div class="fg"><div style="grid-column:1/3"><span class="lbl">Name</span><input class="in" id="a-label" placeholder="e.g. Membership sales"></div></div>
+      <span class="lbl">Type (pick one or two)</span><div class="checks" id="a-types" style="margin-bottom:10px"><div class="chk-opt" data-ty="task" onclick="tgl(this)">☐ Task (checkbox)</div><div class="chk-opt" data-ty="number" onclick="tgl(this)">☐ Number (count)</div><div class="chk-opt" data-ty="text" onclick="tgl(this)">☐ Text response</div></div>
+      <div class="fg"><div><span class="lbl">Priority</span><div class="chk-opt" id="a-pri" onclick="this.classList.toggle('on')" style="margin-top:2px">⚑ Flag as high priority</div></div>
+        <div><span class="lbl">How often</span><select class="in" id="a-cad"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="onetime">One-time (drops off when done)</option></select></div>
+        <div><span class="lbl">Goal (optional)</span><input class="in" id="a-goal" type="number" placeholder="e.g. 2"></div>
+        <div><span class="lbl">Applies to</span><select class="in" id="a-scope" onchange="scopeWhich()"><option value="all">Everyone</option><option value="group">Group(s)</option><option value="shift">Shift(s)</option><option value="employee">Person(s)</option></select></div></div>
+      <div id="a-which-wrap" style="display:none"><span class="lbl">Which (choose one or more)</span><div class="checks" id="a-which" style="margin-bottom:10px"></div></div>
+      <div id="a-textlabel-wrap" style="display:none;margin-bottom:10px"><span class="lbl">Text box label</span><input class="in" id="a-textlabel" placeholder="e.g. Who did you sell to?"></div>
+      <button class="btn" id="a-submit" onclick="saveItem()">+ Add item</button> <button class="btn ghost" id="a-cancel" onclick="cancelItem()" style="display:none">Cancel</button> <span class="muted" id="a-note"></span></div>
+    <div class="card"><div class="filterbar"><span class="lbl" style="margin:0">Filter:</span><select class="in" id="flt" style="max-width:220px" onchange="renderAdmin()"><option value="all">Show everything</option><option value="s-all">Everyone items</option><option value="s-group">Group items</option><option value="s-shift">Shift items</option><option value="s-employee">Individual (per-person) items</option></select><select class="in" id="flt-emp" style="max-width:200px;display:none" onchange="renderAdmin()"></select></div><div id="admin-list"></div></div>
+  </div>
+</div></div>
+<script>
+let MPIN='',emps=[],items=[],groups=[],shifts=[],period='week',trendSpan='weekly',trendMode='total',trendData=null,editingId=null,empEditingId=null;
+const $=id=>document.getElementById(id);const H=()=>({'x-manager-pin':MPIN,'Content-Type':'application/json'});
+const GET=u=>fetch(u,{headers:H()}).then(r=>r.json());
+async function doLogin(){MPIN=$('mpin').value.trim();const r=await fetch('/api/manager/dashboard',{headers:H()});if(r.status===401){$('loginerr').textContent='Wrong PIN.';return;}
+  emps=await r.json();groups=await GET('/api/manager/groups');shifts=await GET('/api/shifts');items=await GET('/api/manager/items');
+  $('login').style.display='none';$('app').style.display='block';renderTeam();buildRollSel();renderAdmin();$('rv-date').value=new Date().toISOString().slice(0,10);}
+function mtab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.t===t));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));$('p-'+t).classList.add('active');}
+async function refreshEmps(){emps=await GET('/api/manager/dashboard');}
+function hColor(h){return h>=70?'var(--green)':h>=40?'var(--amber)':'var(--red)';}
+function renderTeam(){$('team-list').innerHTML=emps.map(e=>`<div class="emp-card" style="--c:${e.color}"><div class="eh"><div class="av" style="background:${e.color}">${e.init}</div><div><div class="en">${e.name}</div><div class="er">${e.role}</div></div><div style="margin-left:auto;text-align:right"><div style="font-weight:800;font-size:18px;color:${e.health==null?'#94a3b8':hColor(e.health)}">${e.health==null?'—':e.health+'%'}</div><div class="er">${e.health==null?'new':'health'}</div></div></div><div class="healthbar"><div class="healthfill" style="width:${e.health==null?0:e.health}%;background:${e.health==null?'#e2e8f0':hColor(e.health)}"></div></div><div class="hstat"><span>Tasks: <b>${e.tasks}</b></span><span>Goals: <b>${e.goals}</b></span></div><div style="margin-top:8px;display:flex;gap:6px;justify-content:flex-end"><button class="btn ghost sm" onclick="editEmp('${e.id}')">Edit</button><button class="btn ghost sm" onclick="resetPin('${e.id}','${e.name}')">⟳ Reset PIN</button><button class="btn red sm" onclick="removeEmp('${e.id}')">Remove</button></div></div>`).join('');}
+// employee CRUD
+function toggleEmpForm(){const f=$('emp-form');f.style.display=f.style.display==='none'?'block':'none';if(f.style.display==='block')empRefs();}
+function empRefs(){$('e-groups').innerHTML=groups.map(g=>`<div class="chk-opt" data-g="${g}" onclick="this.classList.toggle('on')">${g}</div>`).join('');$('e-copy').innerHTML='<option value="">— none (blank) —</option>'+emps.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('');}
+function dupeFrom(){const id=$('e-copy').value;if(!id)return;const e=emps.find(x=>x.id===id);$('e-role').value=e.role;document.querySelectorAll('#e-groups .chk-opt').forEach(el=>el.classList.toggle('on',e.groups.includes(el.dataset.g)));$('e-note').textContent=' — copied '+e.name+"'s title, groups & personal tasks";}
+function editEmp(id){const e=emps.find(x=>x.id===id);empEditingId=id;$('emp-form').style.display='block';empRefs();$('e-name').value=e.name;$('e-role').value=e.role;document.querySelectorAll('#e-groups .chk-opt').forEach(el=>el.classList.toggle('on',e.groups.includes(el.dataset.g)));$('e-submit').textContent='Save changes';$('e-cancel').style.display='inline-block';$('e-note').textContent=' — editing '+e.name;window.scrollTo(0,0);}
+async function saveEmp(){const name=$('e-name').value.trim();if(!name)return alert('Give them a name.');const role=$('e-role').value.trim()||'Staff';const gs=[...document.querySelectorAll('#e-groups .chk-opt.on')].map(x=>x.dataset.g);
+  if(empEditingId){await fetch('/api/manager/employees/'+empEditingId,{method:'PUT',headers:H(),body:JSON.stringify({name,role,groups:gs})});}
+  else{await fetch('/api/manager/employees',{method:'POST',headers:H(),body:JSON.stringify({name,role,groups:gs,copyFrom:$('e-copy').value||null})});}
+  cancelEmp();await refreshEmps();items=await GET('/api/manager/items');renderTeam();buildRollSel();}
+function cancelEmp(){empEditingId=null;$('e-name').value='';$('e-role').value='';$('e-copy').value='';$('e-submit').textContent='Add employee';$('e-cancel').style.display='none';$('e-note').textContent='';document.querySelectorAll('#e-groups .chk-opt.on').forEach(el=>el.classList.remove('on'));$('emp-form').style.display='none';}
+async function removeEmp(id){const e=emps.find(x=>x.id===id);if(!confirm('Remove '+e.name+'? Their history is kept — this hides them.'))return;await fetch('/api/manager/employees/'+id,{method:'DELETE',headers:H()});await refreshEmps();renderTeam();buildRollSel();}
+async function resetPin(id,name){if(!confirm('Reset '+name+"'s PIN? They will create a new one next time they log in."))return;await fetch('/api/manager/employees/'+id+'/resetpin',{method:'POST',headers:H()});alert(name+"'s PIN was reset. Next time they tap their name, they'll set a new PIN.");}
+// rollup
+function buildRollSel(){$('roll-emp').innerHTML=emps.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('');if(emps[0])loadRoll();}
+function setPeriod(p){period=p;$('pw').classList.toggle('active',p==='week');$('pm').classList.toggle('active',p==='month');loadRoll();}
+async function loadRoll(){const id=$('roll-emp').value;if(!id)return;const r=await GET('/api/manager/employee/'+id+'/rollup?period='+period);
+  const nums=r.items.filter(i=>i.kinds.includes('number'));
+  $('roll-sum').innerHTML=nums.map(it=>{const a=r.agg[it.id]||{total:0};const g=it.goal!=null?(period==='month'?it.goal*4:it.goal):null;const gl=g!=null?`<div class="sg ${a.total>=g?'ok':'under'}">${a.total>=g?'✓ hit':'▲ '+(g-a.total)+' to goal'} (${period} goal ${g})</div>`:'';return `<div class="sumc"><div class="sumv">${a.total||0}</div><div class="suml">${it.label}</div>${gl}</div>`;}).join('')||'<div class="muted">No number metrics for this person.</div>';
+  const texts=[];r.items.forEach(it=>{const a=r.agg[it.id];if(a&&a.texts&&a.texts.length)texts.push('<b>'+it.label+':</b> '+a.texts.map(t=>t.text).join('; '));});
+  $('roll-texts').innerHTML=texts.length?'<div class="muted" style="margin-top:8px">'+texts.join('<br>')+'</div>':'';
+  $('rep-name').textContent=(emps.find(e=>e.id===id)||{}).name||'';
+  loadTrend();loadReports(id);loadReviews(id,r.items.filter(i=>i.kinds.includes('number')&&i.goal!=null));}
+// trend
+function setTrendSpan(s){trendSpan=s;document.querySelectorAll('#p-roll .period-btn[data-per]').forEach(b=>b.classList.toggle('active',b.dataset.per===s));loadTrend();}
+function toggleTrendMode(){trendMode=trendMode==='total'?'avg':'total';$('trend-mode').textContent=trendMode==='total'?'Show: Totals':'Show: Avg per shift';drawTrend();}
+async function loadTrend(){const id=$('roll-emp').value;trendData=await GET('/api/manager/employee/'+id+'/trend?span='+trendSpan);drawTrend();}
+function tt(evt,label,name,val,shifts){const t=$('trend-tip');t.innerHTML='<b>'+label+'</b><br>'+name+': <b>'+val+'</b>'+(trendMode==='avg'?' /shift':'')+'<br><span style="color:#94a3b8">'+shifts+' shift'+(shifts==1?'':'s')+'</span>';t.style.display='block';t.style.left=(evt.clientX+12)+'px';t.style.top=(evt.clientY+12)+'px';}
+function ttHide(){$('trend-tip').style.display='none';}
+function drawTrend(){const d=trendData;if(!d||!d.series.length){$('roll-trend').innerHTML='<div class="muted">No trend data yet.</div>';return;}
+  const cols=['#00AEAE','#ec4899','#6366f1','#f59e0b','#0ea5e9','#84cc16'];const W=620,Hh=190,pad=32;
+  const adj=s=>s.values.map((v,i)=>trendMode==='avg'?(s.shifts[i]?+(v/s.shifts[i]).toFixed(1):0):v);
+  let allv=[];d.series.forEach(s=>allv=allv.concat(adj(s)));const max=Math.max(...allv,1);const n=d.labels.length;const step=(W-2*pad)/((n-1)||1);
+  const X=i=>pad+i*step,Y=v=>Hh-pad-(v/max)*(Hh-2*pad);
+  let svg='';d.series.forEach((s,si)=>{const vals=adj(s);const c=cols[si%cols.length];svg+='<polyline fill="none" stroke="'+c+'" stroke-width="2.5" points="'+vals.map((v,i)=>X(i)+','+Y(v)).join(' ')+'"/>';svg+=vals.map((v,i)=>'<circle cx="'+X(i)+'" cy="'+Y(v)+'" r="4" fill="'+c+'" style="cursor:pointer" onmousemove="tt(event,\''+d.labels[i]+'\',\''+s.label.replace(/'/g,"")+'\','+v+','+s.shifts[i]+')" onmouseleave="ttHide()"/>').join('');});
+  const xl=d.labels.map((w,i)=>'<text x="'+X(i)+'" y="'+(Hh-8)+'" font-size="9" fill="#94a3b8" text-anchor="middle">'+w+'</text>').join('');
+  const legend=d.series.map((s,si)=>'<span style="color:'+cols[si%cols.length]+';font-weight:700">● '+s.label+'</span>').join(' &nbsp; ');
+  $('roll-trend').innerHTML='<svg viewBox="0 0 '+W+' '+Hh+'" style="width:100%;height:auto"><line x1="'+pad+'" y1="'+(Hh-pad)+'" x2="'+(W-pad)+'" y2="'+(Hh-pad)+'" stroke="#e2e8f0"/>'+svg+xl+'</svg><div style="font-size:12px">'+legend+' <span class="muted">'+(trendMode==='avg'?'(avg per shift)':'(totals)')+'</span></div>';}
+// reports
+async function loadReports(id){const rs=await GET('/api/manager/employee/'+id+'/reports');
+  $('roll-reports').innerHTML=rs.length?rs.map(r=>`<div class="rev" style="${r.status!=='open'?'opacity:.55':''}"><div style="font-size:13px">${r.message}</div><div class="muted" style="margin-top:4px">${r.date} · ${r.category}${r.status==='open'?' · <a href="#" onclick="resolveRep(\''+r.id+'\');return false" style="color:var(--teal);font-weight:700">mark resolved</a>':' · resolved'}</div></div>`).join(''):'<div class="muted">No reports from this person yet.</div>';}
+async function resolveRep(id){await fetch('/api/manager/reports/'+id,{method:'PUT',headers:H(),body:JSON.stringify({status:'resolved'})});loadReports($('roll-emp').value);}
+// reviews
+let revGoals=[];
+async function loadReviews(id,goalItems){revGoals=goalItems.map(g=>g.label);$('rv-goals').innerHTML=revGoals.map(g=>`<div style="margin:6px 0;font-size:13px">${g}<span class="tl" data-goal="${g}"><span class="g" onclick="pickTL(this)"></span><span class="y" onclick="pickTL(this)"></span><span class="r" onclick="pickTL(this)"></span></span></div>`).join('');
+  const hist=await GET('/api/manager/employee/'+id+'/checkins');
+  $('rev-history').innerHTML='<div class="muted" style="margin:10px 0 6px">History</div>'+(hist.length?hist.map(h=>{const lights=(h.ratings||[]).map(r=>r.goal+': <span class="tl"><span class="'+r.light+'" style="cursor:default"></span></span>').join(' &nbsp; ');return `<div class="rev"><div style="font-weight:700;font-size:13px">${h.date} · ${h.conductor}</div><div style="font-size:12px;margin:4px 0">${lights}</div><div style="font-size:13px">${h.notes||''}</div></div>`;}).join(''):'<div class="muted">No check-ins yet.</div>');}
+function pickTL(el){el.parentNode.querySelectorAll('span').forEach(s=>s.classList.remove('sel'));el.classList.add('sel');}
+async function addReview(){const ratings=[];document.querySelectorAll('#rv-goals .tl').forEach(tl=>{const sel=tl.querySelector('.sel');if(sel)ratings.push({goal:tl.dataset.goal,light:sel.classList.contains('g')?'g':sel.classList.contains('y')?'y':'r'});});
+  await fetch('/api/manager/employee/'+$('roll-emp').value+'/checkins',{method:'POST',headers:H(),body:JSON.stringify({date:$('rv-date').value,conductor:$('rv-by').value,ratings,notes:$('rv-notes').value})});$('rv-notes').value='';loadRoll();}
+// admin (items)
+function tgl(el){el.classList.toggle('on');el.textContent=(el.classList.contains('on')?'☑ ':'☐ ')+el.textContent.slice(2);textLabelVis();}
+function textLabelVis(){const hasText=[...document.querySelectorAll('#a-types .chk-opt.on')].some(x=>x.dataset.ty==='text');$('a-textlabel-wrap').style.display=hasText?'block':'none';}
+function scopeWhich(){const t=$('a-scope').value,w=$('a-which-wrap'),s=$('a-which');if(t==='all'){w.style.display='none';return;}w.style.display='block';let o=t==='group'?groups:t==='shift'?shifts.map(x=>x.name):emps.map(e=>e.name),v=t==='group'?groups:t==='shift'?shifts.map(x=>x.name):emps.map(e=>e.id);s.innerHTML=o.map((x,i)=>`<div class="chk-opt" data-v="${v[i]}" onclick="this.classList.toggle('on')">${x}</div>`).join('');}
+async function saveItem(){const label=$('a-label').value.trim();if(!label)return alert('Name it.');const kinds=[...document.querySelectorAll('#a-types .chk-opt.on')].map(x=>x.dataset.ty);if(!kinds.length)return alert('Pick at least one type.');
+  const scope_type=$('a-scope').value;const scope_values=scope_type==='all'?[]:[...document.querySelectorAll('#a-which .chk-opt.on')].map(x=>x.dataset.v);
+  const body={label,kinds,cadence:$('a-cad').value,scope_type,scope_values,goal:$('a-goal').value!==''?Number($('a-goal').value):null,high_priority:$('a-pri').classList.contains('on'),text_label:kinds.includes('text')?($('a-textlabel').value||'Details'):null};
+  if(editingId)await fetch('/api/manager/items/'+editingId,{method:'PUT',headers:H(),body:JSON.stringify(body)});
+  else await fetch('/api/manager/items',{method:'POST',headers:H(),body:JSON.stringify(body)});
+  clearItemForm();items=await GET('/api/manager/items');renderAdmin();}
+function clearItemForm(){$('a-label').value='';$('a-goal').value='';$('a-textlabel').value='';$('a-pri').classList.remove('on');document.querySelectorAll('#a-types .chk-opt.on').forEach(tgl);document.querySelectorAll('#a-which .chk-opt.on').forEach(el=>el.classList.remove('on'));$('a-textlabel-wrap').style.display='none';editingId=null;$('a-submit').textContent='+ Add item';$('a-cancel').style.display='none';$('a-note').textContent='';}
+function cancelItem(){clearItemForm();}
+function editItem(id){const it=items.find(x=>x.id===id);editingId=id;$('a-label').value=it.label;$('a-pri').classList.toggle('on',!!it.high_priority);$('a-cad').value=it.cadence;$('a-goal').value=it.goal!=null?it.goal:'';$('a-scope').value=it.scope_type;scopeWhich();
+  document.querySelectorAll('#a-types .chk-opt').forEach(el=>{const on=it.kinds.includes(el.dataset.ty);if(on!==el.classList.contains('on'))tgl(el);});
+  document.querySelectorAll('#a-which .chk-opt').forEach(el=>{if(it.scope_values.includes(el.dataset.v))el.classList.add('on');});
+  if(it.text_label)$('a-textlabel').value=it.text_label;textLabelVis();$('a-submit').textContent='✓ Save changes';$('a-cancel').style.display='inline-block';$('a-note').textContent=' — editing "'+it.label+'"';window.scrollTo(0,0);}
+async function delItem(id){if(!confirm('Remove from everyone it applies to?'))return;await fetch('/api/manager/items/'+id,{method:'DELETE',headers:H()});items=await GET('/api/manager/items');renderAdmin();}
+function scopeName(it){if(it.scope_type==='all')return['Everyone'];if(it.scope_type==='employee')return it.scope_values.map(id=>(emps.find(e=>e.id===id)||{}).name||id);return it.scope_values;}
+function renderAdmin(){const f=$('flt').value;$('flt-emp').style.display=f==='s-employee'?'inline-block':'none';if(f==='s-employee'&&!$('flt-emp').innerHTML)$('flt-emp').innerHTML='<option value="">Any person</option>'+emps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+  let list=items.filter(it=>it.active).filter(it=>{if(f==='all')return true;const st=f.slice(2);if(it.scope_type!==st)return false;if(st==='employee'){const pe=$('flt-emp').value;if(pe&&!it.scope_values.includes(pe))return false;}return true;});
+  $('admin-list').innerHTML=list.map(it=>`<div class="item-row">${it.high_priority?'<div class="pribar"></div>':'<div class="pribar" style="background:transparent"></div>'}<div style="flex:1"><div style="margin-bottom:4px">${scopeName(it).map(s=>`<span class="chip c-${it.scope_type}">${s}</span>`).join('')}${it.high_priority?'<span class="pri-chip">⚑ High</span>':''}</div><div><b>${it.label}</b></div><div style="margin-top:3px">${it.kinds.map(k=>`<span class="type-chip">${k==='number'?'count':k}</span>`).join('')}<span class="type-chip">${it.cadence}</span>${it.goal!=null?`<span class="type-chip">goal ${it.goal}</span>`:''}</div></div><div style="display:flex;flex-direction:column;gap:5px;justify-content:center"><button class="btn ghost sm" onclick="editItem('${it.id}')">Edit</button><button class="btn red sm" onclick="delItem('${it.id}')">Remove</button></div></div>`).join('')||'<div class="muted">No items match this filter.</div>';}
+</script></body></html>
