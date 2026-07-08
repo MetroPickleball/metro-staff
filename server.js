@@ -153,7 +153,7 @@ app.get('/api/manager/dashboard',requireManager,(q,res)=>{const today=todayISO()
 app.get('/api/manager/groups',requireManager,(q,res)=>{const set=new Set();
  db.prepare('SELECT groups FROM employees WHERE active=1').all().forEach(r=>J(r.groups).forEach(g=>set.add(g))); res.json([...set]);});
 app.get('/api/manager/employee/:id/rollup',requireManager,(req,res)=>{const period=req.query.period==='month'?'month':'week';
- const anchor=req.query.anchor||todayISO(); const emp=db.prepare('SELECT id,name,role,color,init,groups FROM employees WHERE id=?').get(req.params.id);
+ const anchor=req.query.anchor||todayISO(); const emp=db.prepare('SELECT id,name,role,color,init,groups,responsibilities FROM employees WHERE id=?').get(req.params.id);
  const g=J(emp.groups); const applicable=db.prepare('SELECT * FROM items WHERE active=1').all().filter(it=>{const sv=J(it.scope_values);
   return it.scope_type==='all'||(it.scope_type==='group'&&sv.some(x=>g.includes(x)))||it.scope_type==='shift'||(it.scope_type==='employee'&&sv.includes(emp.id));})
   .map(it=>({...it,kinds:J(it.kinds),scope_values:J(it.scope_values),high_priority:!!it.high_priority}));
@@ -193,6 +193,27 @@ app.delete('/api/manager/items/:iid',requireManager,(q,res)=>{db.prepare('UPDATE
 app.get('/api/manager/reports',requireManager,(q,res)=>res.json(db.prepare('SELECT r.*,e.name FROM reports r JOIN employees e ON e.id=r.employee_id ORDER BY r.created_at DESC').all()));
 app.get('/api/manager/employee/:id/reports',requireManager,(req,res)=>res.json(db.prepare('SELECT * FROM reports WHERE employee_id=? ORDER BY created_at DESC').all(req.params.id)));
 app.put('/api/manager/reports/:rid',requireManager,(req,res)=>{db.prepare('UPDATE reports SET status=? WHERE id=?').run((req.body||{}).status||'resolved',req.params.rid);res.json({ok:true});});
+// full submission log (what each person actually submitted, per date) — team-wide or per-employee
+function buildSubmissions(filterEmpId){
+ const emps=db.prepare('SELECT id,name,role,color,init,groups FROM employees').all();
+ const empMap={}; emps.forEach(e=>empMap[e.id]={id:e.id,name:e.name,role:e.role,color:e.color,init:e.init,groups:J(e.groups)});
+ const w=filterEmpId?'WHERE de.employee_id=?':''; const p=filterEmpId?[filterEmpId]:[];
+ const rows=db.prepare(`SELECT de.employee_id eid,de.date,de.shift,de.item_id,de.value,de.text_value,i.label,i.kinds,i.goal
+   FROM daily_entries de JOIN items i ON i.id=de.item_id ${w} ORDER BY de.date DESC`).all(...p);
+ const wr=filterEmpId?'WHERE employee_id=?':'';
+ const reps=db.prepare(`SELECT id,employee_id eid,date,category,message,status FROM reports ${wr} ORDER BY created_at DESC`).all(...p);
+ const map={};
+ const key=(eid,date)=>eid+'|'+date;
+ rows.forEach(r=>{const k=key(r.eid,r.date); (map[k]||(map[k]={employee_id:r.eid,date:r.date,shift:r.shift||'',items:[],reports:[]}));
+   if(r.shift)map[k].shift=r.shift; map[k].items.push({label:r.label,kinds:J(r.kinds),value:r.value,text_value:r.text_value,goal:r.goal});});
+ reps.forEach(r=>{const k=key(r.eid,r.date); (map[k]||(map[k]={employee_id:r.eid,date:r.date,shift:'',items:[],reports:[]}));
+   map[k].reports.push({id:r.id,category:r.category,message:r.message,status:r.status});});
+ const list=Object.values(map).map(s=>({...s,emp:empMap[s.employee_id]||{name:'(removed)',groups:[],color:'#94a3b8',init:'?'}}));
+ list.sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:0);
+ return list;
+}
+app.get('/api/manager/submissions',requireManager,(q,res)=>res.json(buildSubmissions(null)));
+app.get('/api/manager/employee/:id/submissions',requireManager,(req,res)=>res.json(buildSubmissions(req.params.id)));
 app.get('/api/manager/employee/:id/checkins',requireManager,(req,res)=>res.json(db.prepare('SELECT * FROM checkins WHERE employee_id=? ORDER BY date DESC,created_at DESC').all(req.params.id).map(c=>({...c,ratings:J(c.ratings)}))));
 app.post('/api/manager/employee/:id/checkins',requireManager,(req,res)=>{const b=req.body||{};
  db.prepare('INSERT INTO checkins(id,employee_id,date,conductor,ratings,notes) VALUES(?,?,?,?,?,?)').run(uid(),req.params.id,b.date||todayISO(),b.conductor||'Nick',JSON.stringify(b.ratings||[]),b.notes||'');res.json({ok:true});});

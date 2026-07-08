@@ -54,6 +54,25 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
 .pvsec{border-left:4px solid var(--sc,#ccc);padding:6px 0 6px 10px;margin-bottom:10px}
 .pvhead{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
 .pvitem{padding:6px 0;border-bottom:1px solid #f1f5f9}.pvitem:last-child{border-bottom:none}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px}
+.tbox{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-top:4px solid var(--c);display:flex;flex-direction:column;gap:8px}
+.tbox .eh{margin-bottom:0}.tbox .av{width:34px;height:34px;font-size:13px}
+.tbox .en{font-size:13px}.tbox .er{font-size:10px}
+.tbox .healthbar{height:8px}.tbox .hstat{font-size:10px}
+.tbox-btns{display:flex;gap:5px;flex-wrap:wrap}
+.rep{border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.rep.done{opacity:.5;background:#f8fafc}
+.rep-msg{font-size:13px}.rep-meta{font-size:11px;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sub{border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.sub-head{display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:pointer;background:#f8fafc}
+.sub-head:hover{background:#eef4f8}
+.sub-body{padding:10px 12px;border-top:1px solid var(--border);display:none}
+.sub.open .sub-body{display:block}
+.sub-ck{margin-left:auto;color:var(--muted);font-size:12px}
+.sub-line{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #f4f7fa;font-size:13px}.sub-line:last-child{border-bottom:none}
+.sub-val{font-weight:700;color:var(--teal-d)}
+.subval-done{color:var(--green)}.subval-no{color:var(--muted)}
+.mini-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:11px;flex-shrink:0}
 </style></head><body>
 <div id="trend-tip" style="position:fixed;display:none;background:#1c2b3a;color:#fff;padding:6px 9px;border-radius:6px;font-size:12px;pointer-events:none;z-index:99"></div>
 <div id="login" class="login card">
@@ -68,6 +87,11 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
 <div class="tabs"><button class="tab active" data-t="team" onclick="mtab('team')">Team</button><button class="tab" data-t="roll" onclick="mtab('roll')">Rollup</button><button class="tab" data-t="admin" onclick="mtab('admin')">Tasks &amp; Metrics</button></div>
 <div class="wrap">
   <div class="panel active" id="p-team">
+    <div class="card">
+      <div class="row" style="margin-bottom:6px"><div class="h2" style="margin:0">📣 Reports to Nick &amp; Brayden</div><button class="btn ghost sm" id="rep-expand" onclick="toggleAllReports()">See all</button></div>
+      <div class="muted" style="margin-bottom:10px">The latest “anything else to report” notes from the team. Mark one complete to clear it out of your top three.</div>
+      <div id="team-reports"><div class="muted">Loading…</div></div>
+    </div>
     <div class="card"><div class="row" style="margin-bottom:0"><div class="h2" style="margin:0">People</div><button class="btn sm" onclick="toggleEmpForm()">+ Add employee</button></div>
       <div id="emp-form" style="display:none;border-top:1px solid var(--border);padding-top:12px;margin-top:10px">
         <div class="fg"><div><span class="lbl">Name</span><input class="in" id="e-name" placeholder="e.g. Dan"></div><div><span class="lbl">Job title</span><input class="in" id="e-role" placeholder="e.g. Front Desk"></div></div>
@@ -77,13 +101,29 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
         <span class="lbl" style="margin-top:10px">Responsibilities (shown at the bottom of their staff check-in)</span><textarea class="in" id="e-resp" rows="3" placeholder="What this person is responsible for…"></textarea>
         <div style="margin-top:10px"><button class="btn" id="e-submit" onclick="saveEmp()">Add employee</button> <button class="btn ghost" id="e-cancel" onclick="cancelEmp()" style="display:none">Cancel</button> <span class="muted" id="e-note"></span></div>
       </div></div>
-    <div class="card"><div class="row" style="margin-bottom:0"><div class="h2" style="margin:0">Export &amp; backup</div><div><button class="btn ghost sm" onclick="exportCSV()">⬇ Data (CSV)</button> <button class="btn ghost sm" onclick="exportDB()">⬇ Full backup (.db)</button></div></div><div class="muted" style="margin-top:6px">CSV opens in Excel for deeper reporting. The .db is a complete backup of everything.</div></div>
     <div class="muted" style="margin:0 0 10px 4px">Health = tasks completed + goals hit over the last 2 weeks.</div>
     <div id="team-list"></div>
+    <div class="card">
+      <div class="row" style="margin-bottom:6px"><div class="h2" style="margin:0">📋 Submission log</div><button class="btn ghost sm" id="sub-expand" onclick="toggleAllSubs()">See all</button></div>
+      <div class="muted" style="margin-bottom:10px">Everything the team has actually submitted. Click any submission to see the full detail.</div>
+      <div id="sub-filters" class="filterbar" style="display:none">
+        <select class="in" id="sf-group" style="max-width:150px" onchange="renderSubs()"><option value="">All groups</option></select>
+        <select class="in" id="sf-emp" style="max-width:160px" onchange="renderSubs()"><option value="">All people</option></select>
+        <select class="in" id="sf-shift" style="max-width:150px" onchange="renderSubs()"><option value="">All shifts</option></select>
+        <input class="in" id="sf-date" type="date" style="max-width:160px" onchange="renderSubs()">
+        <button class="btn ghost sm" id="sf-7" onclick="toggle7()">Last 7 days</button>
+        <button class="btn ghost sm" onclick="clearSubFilters()">Clear</button>
+      </div>
+      <div id="team-subs"><div class="muted">Loading…</div></div>
+    </div>
+    <div class="card"><div class="row" style="margin-bottom:0"><div class="h2" style="margin:0">Export &amp; backup</div><div><button class="btn ghost sm" onclick="exportCSV()">⬇ Data (CSV)</button> <button class="btn ghost sm" onclick="exportDB()">⬇ Full backup (.db)</button></div></div><div class="muted" style="margin-top:6px">CSV opens in Excel for deeper reporting. The .db is a complete backup of everything.</div></div>
   </div>
   <div class="panel" id="p-roll">
     <div class="row"><select class="in" id="roll-emp" style="max-width:260px" onchange="loadRoll()"></select><div><button class="period-btn active" id="pw" onclick="setPeriod('week')">Week</button> <button class="period-btn" id="pm" onclick="setPeriod('month')">Month</button></div></div>
     <div class="card"><div class="h2">This period</div><div class="sum" id="roll-sum"></div><div id="roll-texts"></div></div>
+    <div class="card"><div class="row" style="margin-bottom:6px"><div class="h2" style="margin:0">📋 Submission log</div><button class="btn ghost sm" id="eroll-expand" onclick="toggleEmpSubs()">See all</button></div>
+      <div class="muted" style="margin-bottom:10px">Every past check-in from this person. Click one to see exactly what they submitted.</div>
+      <div id="roll-subs"></div></div>
     <div class="card"><div class="h2">👁 Preview their check-in</div>
       <div class="muted" style="margin-bottom:8px">See what this person's screen looks like for a given shift (the full assigned list).</div>
       <select class="in" id="pv-shift" style="max-width:220px;margin-bottom:10px" onchange="loadPreview()"></select>
@@ -97,6 +137,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
         <div id="rv-goals"></div><span class="lbl" style="margin-top:8px">Notes</span><textarea class="in" id="rv-notes" rows="2" placeholder="How are they doing, follow-ups…"></textarea>
         <button class="btn" style="margin-top:10px" onclick="addReview()">Save check-in</button></div>
       <div id="rev-history"></div></div>
+    <div class="card"><div class="h2">📋 Responsibilities</div><div id="roll-resp" style="margin-top:8px"></div></div>
   </div>
   <div class="panel" id="p-admin">
     <div class="card"><div class="h2">Add / edit a task or metric</div>
@@ -115,17 +156,53 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
 </div></div>
 <script>
 let MPIN='',emps=[],items=[],groups=[],shifts=[],period='week',trendSpan='weekly',trendMode='total',trendData=null,editingId=null,empEditingId=null;
+let teamReports=[],repsExpanded=false,allSubs=[],subsExpanded=false,last7=false,empSubs=[],empSubsExpanded=false;
 const $=id=>document.getElementById(id);const H=()=>({'x-manager-pin':MPIN,'Content-Type':'application/json'});
 const GET=u=>fetch(u,{headers:H()}).then(r=>r.json());
 async function doLogin(){MPIN=$('mpin').value.trim();const r=await fetch('/api/manager/dashboard',{headers:H()});if(r.status===401){$('loginerr').textContent='Wrong PIN.';return;}
   emps=await r.json();groups=await GET('/api/manager/groups');shifts=await GET('/api/shifts');items=await GET('/api/manager/items');
-  $('login').style.display='none';$('app').style.display='block';renderTeam();buildRollSel();renderAdmin();$('rv-date').value=new Date().toISOString().slice(0,10);$('pv-shift').innerHTML=shifts.map(s=>'<option>'+s.name+'</option>').join('');}
+  $('login').style.display='none';$('app').style.display='block';renderTeam();buildRollSel();renderAdmin();$('rv-date').value=new Date().toISOString().slice(0,10);$('pv-shift').innerHTML=shifts.map(s=>'<option>'+s.name+'</option>').join('');
+  buildSubFilters();loadTeamReports();loadSubs();}
+function buildSubFilters(){$('sf-group').innerHTML='<option value="">All groups</option>'+groups.map(g=>`<option value="${g}">${g}</option>`).join('');
+  $('sf-emp').innerHTML='<option value="">All people</option>'+emps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+  $('sf-shift').innerHTML='<option value="">All shifts</option>'+shifts.map(s=>`<option value="${s.name}">${s.name}</option>`).join('');}
 function exportCSV(){window.open('/api/manager/export/daily.csv?pin='+encodeURIComponent(MPIN));}
 function exportDB(){window.open('/api/manager/export/db?pin='+encodeURIComponent(MPIN));}
 function mtab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.t===t));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));$('p-'+t).classList.add('active');}
 async function refreshEmps(){emps=await GET('/api/manager/dashboard');}
 function hColor(h){return h>=70?'var(--green)':h>=40?'var(--amber)':'var(--red)';}
-function renderTeam(){$('team-list').innerHTML=emps.map(e=>`<div class="emp-card" style="--c:${e.color}"><div class="eh"><div class="av" style="background:${e.color}">${e.init}</div><div><div class="en">${e.name}</div><div class="er">${e.role}</div></div><div style="margin-left:auto;text-align:right"><div style="font-weight:800;font-size:18px;color:${e.health==null?'#94a3b8':hColor(e.health)}">${e.health==null?'—':e.health+'%'}</div><div class="er">${e.health==null?'new':'health'}</div></div></div><div class="healthbar"><div class="healthfill" style="width:${e.health==null?0:e.health}%;background:${e.health==null?'#e2e8f0':hColor(e.health)}"></div></div><div class="hstat"><span>Tasks: <b>${e.tasks}</b></span><span>Goals: <b>${e.goals}</b></span></div><div style="margin-top:8px;display:flex;gap:6px;justify-content:flex-end"><button class="btn ghost sm" onclick="editEmp('${e.id}')">Edit</button><button class="btn ghost sm" onclick="resetPin('${e.id}','${e.name}')">⟳ Reset PIN</button><button class="btn red sm" onclick="removeEmp('${e.id}')">Remove</button></div></div>`).join('');}
+function renderTeam(){$('team-list').innerHTML='<div class="team-grid">'+emps.map(e=>`<div class="tbox" style="--c:${e.color}"><div class="eh"><div class="av" style="background:${e.color}">${e.init}</div><div style="min-width:0"><div class="en">${e.name}</div><div class="er">${e.role}</div></div><div style="margin-left:auto;text-align:right"><div style="font-weight:800;font-size:15px;color:${e.health==null?'#94a3b8':hColor(e.health)}">${e.health==null?'—':e.health+'%'}</div></div></div><div class="healthbar"><div class="healthfill" style="width:${e.health==null?0:e.health}%;background:${e.health==null?'#e2e8f0':hColor(e.health)}"></div></div><div class="hstat" style="display:flex;justify-content:space-between"><span>T: <b>${e.tasks}</b></span><span>G: <b>${e.goals}</b></span><span>${e.submittedToday?'✓ today':'<span style="color:#94a3b8">—</span>'}</span></div><div class="tbox-btns"><button class="btn ghost sm" onclick="editEmp('${e.id}')">Edit</button><button class="btn ghost sm" onclick="resetPin('${e.id}','${e.name}')">⟳ PIN</button><button class="btn red sm" onclick="removeEmp('${e.id}')">Remove</button></div></div>`).join('')+'</div>';}
+// ---- Reports to Nick & Brayden ----
+async function loadTeamReports(){teamReports=await GET('/api/manager/reports');renderTeamReports();}
+function renderTeamReports(){const open=teamReports.filter(r=>r.status==='open');
+  const list=repsExpanded?teamReports:open.slice(0,3);
+  $('rep-expand').textContent=repsExpanded?'Show top 3':'See all ('+open.length+' open)';
+  if(!list.length){$('team-reports').innerHTML='<div class="muted">Nothing to report right now. 🎉</div>';return;}
+  $('team-reports').innerHTML=list.map(r=>{const e=emps.find(x=>x.id===r.employee_id)||{color:'#94a3b8',init:'?',name:r.name||'?'};const done=r.status!=='open';
+    return `<div class="rep ${done?'done':''}"><div class="rep-msg">${escapeHtml(r.message)}</div><div class="rep-meta"><span class="mini-av" style="background:${e.color};width:20px;height:20px;font-size:10px">${e.init}</span><b>${e.name}</b> · ${r.date} · ${r.category}${done?' · <span style="color:var(--green);font-weight:700">✓ complete</span>':` · <a href="#" onclick="completeReport('${r.id}');return false" style="color:var(--teal);font-weight:700">mark complete</a>`}</div></div>`;}).join('');}
+async function completeReport(id){await fetch('/api/manager/reports/'+id,{method:'PUT',headers:H(),body:JSON.stringify({status:'resolved'})});await loadTeamReports();}
+function toggleAllReports(){repsExpanded=!repsExpanded;renderTeamReports();}
+function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+// ---- Team-wide submission log ----
+async function loadSubs(){allSubs=await GET('/api/manager/submissions');renderSubs();}
+function toggle7(){last7=!last7;$('sf-7').classList.toggle('on',last7);renderSubs();}
+function clearSubFilters(){last7=false;$('sf-7').classList.remove('on');$('sf-group').value='';$('sf-emp').value='';$('sf-shift').value='';$('sf-date').value='';renderSubs();}
+function filterSubs(subs){const g=$('sf-group').value,em=$('sf-emp').value,sh=$('sf-shift').value,dt=$('sf-date').value;
+  let cutoff=null;if(last7){const d=new Date();d.setDate(d.getDate()-6);cutoff=d.toISOString().slice(0,10);}
+  return subs.filter(s=>{if(g&&!(s.emp.groups||[]).includes(g))return false;if(em&&s.employee_id!==em)return false;if(sh&&s.shift!==sh)return false;if(dt&&s.date!==dt)return false;if(cutoff&&s.date<cutoff)return false;return true;});}
+function subRow(s,idx){const e=s.emp;const rep=s.reports&&s.reports.length?s.reports.map(r=>r.message).join(' / '):'';
+  const lines=s.items.map(it=>{const isTask=it.kinds.includes('task');let v;
+    if(isTask)v=it.value==1?'<span class="subval-done">✓ done</span>':'<span class="subval-no">—</span>';
+    else if(it.kinds.includes('number'))v='<span class="sub-val">'+(it.value==null?'—':it.value)+'</span>'+(it.goal!=null?' <span class="muted">/ '+it.goal+'</span>':'');
+    else v='<span class="muted">—</span>';
+    const txt=it.text_value?'<div class="muted" style="margin-top:2px">“'+escapeHtml(it.text_value)+'”</div>':'';
+    return '<div class="sub-line"><div>'+escapeHtml(it.label)+txt+'</div><div>'+v+'</div></div>';}).join('')||'<div class="muted">No items recorded.</div>';
+  const repBlock=rep?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><div class="muted" style="font-weight:700;margin-bottom:2px">📣 Report to Nick &amp; Brayden</div>'+escapeHtml(rep)+'</div>':'';
+  return `<div class="sub" id="sub-${idx}"><div class="sub-head" onclick="document.getElementById('sub-${idx}').classList.toggle('open')"><span class="mini-av" style="background:${e.color}">${e.init}</span><div><b style="font-size:13px">${e.name}</b> <span class="muted" style="font-size:12px">${s.date}${s.shift?' · '+s.shift:''}</span></div><span class="sub-ck">${s.items.length} item${s.items.length==1?'':'s'} ▾</span></div><div class="sub-body">${lines}${repBlock}</div></div>`;}
+function renderSubs(){const f=filterSubs(allSubs);$('sub-filters').style.display=subsExpanded?'flex':'none';
+  const list=subsExpanded?f:f.slice(0,3);$('sub-expand').textContent=subsExpanded?'Show latest 3':'See all ('+f.length+')';
+  $('team-subs').innerHTML=list.length?list.map((s,i)=>subRow(s,i)).join(''):'<div class="muted">No submissions match.</div>';}
+function toggleAllSubs(){subsExpanded=!subsExpanded;renderSubs();}
 // employee CRUD
 function toggleEmpForm(){const f=$('emp-form');f.style.display=f.style.display==='none'?'block':'none';if(f.style.display==='block')empRefs();}
 function empRefs(){$('e-groups').innerHTML=groups.map(g=>`<div class="chk-opt" data-g="${g}" onclick="this.classList.toggle('on')">${g}</div>`).join('');$('e-copy').innerHTML='<option value="">— none (blank) —</option>'+emps.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('');}
@@ -134,9 +211,9 @@ function editEmp(id){const e=emps.find(x=>x.id===id);empEditingId=id;$('emp-form
 async function saveEmp(){const name=$('e-name').value.trim();if(!name)return alert('Give them a name.');const role=$('e-role').value.trim()||'Staff';const gs=[...document.querySelectorAll('#e-groups .chk-opt.on')].map(x=>x.dataset.g);const resp=$('e-resp').value;
   if(empEditingId){await fetch('/api/manager/employees/'+empEditingId,{method:'PUT',headers:H(),body:JSON.stringify({name,role,groups:gs,responsibilities:resp})});}
   else{await fetch('/api/manager/employees',{method:'POST',headers:H(),body:JSON.stringify({name,role,groups:gs,responsibilities:resp,copyFrom:$('e-copy').value||null})});}
-  cancelEmp();await refreshEmps();items=await GET('/api/manager/items');renderTeam();buildRollSel();}
+  cancelEmp();await refreshEmps();items=await GET('/api/manager/items');renderTeam();buildRollSel();buildSubFilters();}
 function cancelEmp(){empEditingId=null;$('e-name').value='';$('e-role').value='';$('e-resp').value='';$('e-copy').value='';$('e-submit').textContent='Add employee';$('e-cancel').style.display='none';$('e-note').textContent='';document.querySelectorAll('#e-groups .chk-opt.on').forEach(el=>el.classList.remove('on'));$('emp-form').style.display='none';}
-async function removeEmp(id){const e=emps.find(x=>x.id===id);if(!confirm('Remove '+e.name+'? Their history is kept — this hides them.'))return;await fetch('/api/manager/employees/'+id,{method:'DELETE',headers:H()});await refreshEmps();renderTeam();buildRollSel();}
+async function removeEmp(id){const e=emps.find(x=>x.id===id);if(!confirm('Remove '+e.name+'? Their history is kept — this hides them.'))return;await fetch('/api/manager/employees/'+id,{method:'DELETE',headers:H()});await refreshEmps();renderTeam();buildRollSel();buildSubFilters();}
 async function resetPin(id,name){if(!confirm('Reset '+name+"'s PIN? They will create a new one next time they log in."))return;await fetch('/api/manager/employees/'+id+'/resetpin',{method:'POST',headers:H()});alert(name+"'s PIN was reset. Next time they tap their name, they'll set a new PIN.");}
 // rollup
 function buildRollSel(){$('roll-emp').innerHTML=emps.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('');if(emps[0])loadRoll();}
@@ -147,7 +224,14 @@ async function loadRoll(){const id=$('roll-emp').value;if(!id)return;const r=awa
   const texts=[];r.items.forEach(it=>{const a=r.agg[it.id];if(a&&a.texts&&a.texts.length)texts.push('<b>'+it.label+':</b> '+a.texts.map(t=>t.text).join('; '));});
   $('roll-texts').innerHTML=texts.length?'<div class="muted" style="margin-top:8px">'+texts.join('<br>')+'</div>':'';
   $('rep-name').textContent=(emps.find(e=>e.id===id)||{}).name||'';
-  loadTrend();loadReports(id);loadReviews(id,r.items.filter(i=>i.kinds.includes('number')&&i.goal!=null));loadPreview();}
+  const resp=r.emp&&r.emp.responsibilities;$('roll-resp').innerHTML=resp?`<div style="font-size:14px;white-space:pre-wrap">${escapeHtml(resp)}</div>`:'<div class="muted">No responsibilities set for this person yet. Add them in the Team tab (Edit).</div>';
+  empSubsExpanded=false;loadTrend();loadReports(id);loadReviews(id,r.items.filter(i=>i.kinds.includes('number')&&i.goal!=null));loadPreview();loadEmpSubs(id);}
+// ---- per-employee submission log (rollup) ----
+async function loadEmpSubs(id){empSubs=await GET('/api/manager/employee/'+id+'/submissions');renderEmpSubs();}
+function renderEmpSubs(){const list=empSubsExpanded?empSubs:empSubs.slice(0,3);
+  $('eroll-expand').textContent=empSubsExpanded?'Show latest 3':'See all ('+empSubs.length+')';
+  $('roll-subs').innerHTML=list.length?list.map((s,i)=>subRow(s,'e'+i)).join(''):'<div class="muted">No submissions from this person yet.</div>';}
+function toggleEmpSubs(){empSubsExpanded=!empSubsExpanded;renderEmpSubs();}
 // trend
 function setTrendSpan(s){trendSpan=s;document.querySelectorAll('#p-roll .period-btn[data-per]').forEach(b=>b.classList.toggle('active',b.dataset.per===s));loadTrend();}
 function toggleTrendMode(){trendMode=trendMode==='total'?'avg':'total';$('trend-mode').textContent=trendMode==='total'?'Show: Totals':'Show: Avg per shift';drawTrend();}
@@ -163,10 +247,10 @@ function drawTrend(){const d=trendData;if(!d||!d.series.length){$('roll-trend').
   const xl=d.labels.map((w,i)=>'<text x="'+X(i)+'" y="'+(Hh-8)+'" font-size="9" fill="#94a3b8" text-anchor="middle">'+w+'</text>').join('');
   const legend=d.series.map((s,si)=>'<span style="color:'+cols[si%cols.length]+';font-weight:700">● '+s.label+'</span>').join(' &nbsp; ');
   $('roll-trend').innerHTML='<svg viewBox="0 0 '+W+' '+Hh+'" style="width:100%;height:auto"><line x1="'+pad+'" y1="'+(Hh-pad)+'" x2="'+(W-pad)+'" y2="'+(Hh-pad)+'" stroke="#e2e8f0"/>'+svg+xl+'</svg><div style="font-size:12px">'+legend+' <span class="muted">'+(trendMode==='avg'?'(avg per shift)':'(totals)')+'</span></div>';}
-// reports
+// reports (rollup, per-employee)
 async function loadReports(id){const rs=await GET('/api/manager/employee/'+id+'/reports');
-  $('roll-reports').innerHTML=rs.length?rs.map(r=>`<div class="rev" style="${r.status!=='open'?'opacity:.55':''}"><div style="font-size:13px">${r.message}</div><div class="muted" style="margin-top:4px">${r.date} · ${r.category}${r.status==='open'?' · <a href="#" onclick="resolveRep(\''+r.id+'\');return false" style="color:var(--teal);font-weight:700">mark resolved</a>':' · resolved'}</div></div>`).join(''):'<div class="muted">No reports from this person yet.</div>';}
-async function resolveRep(id){await fetch('/api/manager/reports/'+id,{method:'PUT',headers:H(),body:JSON.stringify({status:'resolved'})});loadReports($('roll-emp').value);}
+  $('roll-reports').innerHTML=rs.length?rs.map(r=>`<div class="rev" style="${r.status!=='open'?'opacity:.55':''}"><div style="font-size:13px">${r.message}</div><div class="muted" style="margin-top:4px">${r.date} · ${r.category}${r.status==='open'?' · <a href="#" onclick="resolveRep(\''+r.id+'\');return false" style="color:var(--teal);font-weight:700">mark complete</a>':' · complete'}</div></div>`).join(''):'<div class="muted">No reports from this person yet.</div>';}
+async function resolveRep(id){await fetch('/api/manager/reports/'+id,{method:'PUT',headers:H(),body:JSON.stringify({status:'resolved'})});loadReports($('roll-emp').value);loadTeamReports();}
 // reviews
 let revGoals=[];
 async function loadReviews(id,goalItems){revGoals=goalItems.map(g=>g.label);$('rv-goals').innerHTML=revGoals.map(g=>`<div style="margin:6px 0;font-size:13px">${g}<span class="tl" data-goal="${g}"><span class="g" onclick="pickTL(this)"></span><span class="y" onclick="pickTL(this)"></span><span class="r" onclick="pickTL(this)"></span></span></div>`).join('');
@@ -177,7 +261,6 @@ async function loadPreview(){const id=$('roll-emp').value;if(!id)return;const sh
  const g={shift:[],group:[],all:[],employee:[]};r.items.forEach(it=>g[it.scope_type].push(it));
  const meta={shift:['🕑 '+shift+' shift','var(--shift)'],group:['🎯 Their group','var(--group)'],all:['👥 All staff','var(--all)'],employee:['⭐ Just them','var(--me)']};
  let html='';for(const k of ['shift','group','all','employee']){if(!g[k].length)continue;html+='<div class="pvsec" style="--sc:'+meta[k][1]+'"><div class="pvhead">'+meta[k][0]+'</div>'+g[k].map(pvRow).join('')+'</div>';}
- if(r.emp.responsibilities)html+='<div class="pvsec" style="--sc:#94a3b8"><div class="pvhead">📋 Responsibilities</div><div style="font-size:14px;white-space:pre-wrap">'+r.emp.responsibilities.replace(/</g,'&lt;')+'</div></div>';
  $('pv-list').innerHTML=html||'<div class="muted">Nothing assigned for this shift.</div>';}
 function pvRow(it){const pri=it.high_priority?'<span class="pri-chip">★ High</span> ':'';const types=it.kinds.map(k=>k==='task'?'☐ task':k==='number'?'# count':'✎ text').join(' + ');
  return '<div class="pvitem"><div><b>'+pri+it.label+'</b></div><div class="muted" style="margin-top:2px">'+types+' · '+it.cadence+(it.completion==='shared'?' · shared':'')+'</div></div>';}
