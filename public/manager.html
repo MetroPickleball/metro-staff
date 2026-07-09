@@ -88,21 +88,19 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
 <div class="wrap">
   <div class="panel active" id="p-team">
     <div class="card">
+      <div class="row" style="margin-bottom:6px"><div class="h2" style="margin:0">📌 Focus banner</div></div>
+      <div class="muted" style="margin-bottom:10px">Post a key update to the top of the staff portal. Choose who sees it — it stays up until you remove it.</div>
+      <textarea class="in" id="bn-msg" rows="2" placeholder="e.g. Everyone focus on filling the Learn to Play events — top priority. — Nick"></textarea>
+      <div class="fg" style="margin-top:10px"><div><span class="lbl">Show to</span><select class="in" id="bn-scope" onchange="bnScopeWhich()"><option value="all">Everyone</option><option value="group">Group(s)</option><option value="shift">Shift(s)</option><option value="employee">Person(s)</option></select></div><div><span class="lbl">Style</span><select class="in" id="bn-style"><option value="focus">Focus (teal)</option><option value="alert">Alert (amber)</option><option value="info">Info (grey)</option></select></div></div>
+      <div id="bn-which-wrap" style="display:none;margin-bottom:10px"><span class="lbl">Which (choose one or more)</span><div class="checks" id="bn-which"></div></div>
+      <button class="btn" id="bn-submit" onclick="saveBanner()">Post banner</button> <button class="btn ghost" id="bn-cancel" onclick="cancelBanner()" style="display:none">Cancel</button>
+      <div id="bn-list" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
       <div class="row" style="margin-bottom:6px"><div class="h2" style="margin:0">📣 Reports to Nick &amp; Brayden</div><button class="btn ghost sm" id="rep-expand" onclick="toggleAllReports()">See all</button></div>
       <div class="muted" style="margin-bottom:10px">The latest “anything else to report” notes from the team. Mark one complete to clear it out of your top three.</div>
       <div id="team-reports"><div class="muted">Loading…</div></div>
     </div>
-    <div class="card"><div class="row" style="margin-bottom:0"><div class="h2" style="margin:0">People</div><button class="btn sm" onclick="toggleEmpForm()">+ Add employee</button></div>
-      <div id="emp-form" style="display:none;border-top:1px solid var(--border);padding-top:12px;margin-top:10px">
-        <div class="fg"><div><span class="lbl">Name</span><input class="in" id="e-name" placeholder="e.g. Dan"></div><div><span class="lbl">Job title</span><input class="in" id="e-role" placeholder="e.g. Front Desk"></div></div>
-        <span class="lbl">Group(s)</span><div class="checks" id="e-groups" style="margin-bottom:10px"></div>
-        <span class="lbl">Copy setup from (optional — duplicates title, groups &amp; personal tasks)</span>
-        <select class="in" id="e-copy" onchange="dupeFrom()"><option value="">— none (blank) —</option></select>
-        <span class="lbl" style="margin-top:10px">Responsibilities (shown at the bottom of their staff check-in)</span><textarea class="in" id="e-resp" rows="3" placeholder="What this person is responsible for…"></textarea>
-        <div style="margin-top:10px"><button class="btn" id="e-submit" onclick="saveEmp()">Add employee</button> <button class="btn ghost" id="e-cancel" onclick="cancelEmp()" style="display:none">Cancel</button> <span class="muted" id="e-note"></span></div>
-      </div></div>
-    <div class="muted" style="margin:0 0 10px 4px">Health = tasks completed + goals hit over the last 2 weeks.</div>
-    <div id="team-list"></div>
     <div class="card">
       <div class="row" style="margin-bottom:6px"><div class="h2" style="margin:0">📋 Submission log</div><button class="btn ghost sm" id="sub-expand" onclick="toggleAllSubs()">See all</button></div>
       <div class="muted" style="margin-bottom:10px">Everything the team has actually submitted. Click any submission to see the full detail.</div>
@@ -116,6 +114,17 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
       </div>
       <div id="team-subs"><div class="muted">Loading…</div></div>
     </div>
+    <div class="card"><div class="row" style="margin-bottom:0"><div class="h2" style="margin:0">People</div><button class="btn sm" onclick="toggleEmpForm()">+ Add employee</button></div>
+      <div id="emp-form" style="display:none;border-top:1px solid var(--border);padding-top:12px;margin-top:10px">
+        <div class="fg"><div><span class="lbl">Name</span><input class="in" id="e-name" placeholder="e.g. Dan"></div><div><span class="lbl">Job title</span><input class="in" id="e-role" placeholder="e.g. Front Desk"></div></div>
+        <span class="lbl">Group(s)</span><div class="checks" id="e-groups" style="margin-bottom:10px"></div>
+        <span class="lbl">Copy setup from (optional — duplicates title, groups &amp; personal tasks)</span>
+        <select class="in" id="e-copy" onchange="dupeFrom()"><option value="">— none (blank) —</option></select>
+        <span class="lbl" style="margin-top:10px">Responsibilities (shown at the bottom of their staff check-in)</span><textarea class="in" id="e-resp" rows="3" placeholder="What this person is responsible for…"></textarea>
+        <div style="margin-top:10px"><button class="btn" id="e-submit" onclick="saveEmp()">Add employee</button> <button class="btn ghost" id="e-cancel" onclick="cancelEmp()" style="display:none">Cancel</button> <span class="muted" id="e-note"></span></div>
+      </div></div>
+    <div class="muted" style="margin:0 0 10px 4px">Health = tasks completed + goals hit over the last 2 weeks.</div>
+    <div id="team-list"></div>
     <div class="card"><div class="row" style="margin-bottom:0"><div class="h2" style="margin:0">Export &amp; backup</div><div><button class="btn ghost sm" onclick="exportCSV()">⬇ Data (CSV)</button> <button class="btn ghost sm" onclick="exportDB()">⬇ Full backup (.db)</button></div></div><div class="muted" style="margin-top:6px">CSV opens in Excel for deeper reporting. The .db is a complete backup of everything.</div></div>
   </div>
   <div class="panel" id="p-roll">
@@ -162,7 +171,7 @@ const GET=u=>fetch(u,{headers:H()}).then(r=>r.json());
 async function doLogin(){MPIN=$('mpin').value.trim();const r=await fetch('/api/manager/dashboard',{headers:H()});if(r.status===401){$('loginerr').textContent='Wrong PIN.';return;}
   emps=await r.json();groups=await GET('/api/manager/groups');shifts=await GET('/api/shifts');items=await GET('/api/manager/items');
   $('login').style.display='none';$('app').style.display='block';renderTeam();buildRollSel();renderAdmin();$('rv-date').value=new Date().toISOString().slice(0,10);$('pv-shift').innerHTML=shifts.map(s=>'<option>'+s.name+'</option>').join('');
-  buildSubFilters();loadTeamReports();loadSubs();}
+  buildSubFilters();loadTeamReports();loadSubs();loadBanners();}
 function buildSubFilters(){$('sf-group').innerHTML='<option value="">All groups</option>'+groups.map(g=>`<option value="${g}">${g}</option>`).join('');
   $('sf-emp').innerHTML='<option value="">All people</option>'+emps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
   $('sf-shift').innerHTML='<option value="">All shifts</option>'+shifts.map(s=>`<option value="${s.name}">${s.name}</option>`).join('');}
@@ -183,6 +192,28 @@ function renderTeamReports(){const open=teamReports.filter(r=>r.status==='open')
 async function completeReport(id){await fetch('/api/manager/reports/'+id,{method:'PUT',headers:H(),body:JSON.stringify({status:'resolved'})});await loadTeamReports();}
 function toggleAllReports(){repsExpanded=!repsExpanded;renderTeamReports();}
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+// ---- Focus banners ----
+let banners=[],bnEditingId=null;
+async function loadBanners(){banners=await GET('/api/manager/banners');renderBanners();}
+function bnScopeWhich(){const t=$('bn-scope').value,w=$('bn-which-wrap'),s=$('bn-which');if(t==='all'){w.style.display='none';return;}w.style.display='block';
+  const o=t==='group'?groups:t==='shift'?shifts.map(x=>x.name):emps.map(e=>e.name),v=t==='group'?groups:t==='shift'?shifts.map(x=>x.name):emps.map(e=>e.id);
+  s.innerHTML=o.map((x,i)=>`<div class="chk-opt" data-v="${escapeHtml(v[i])}" onclick="this.classList.toggle('on')">${escapeHtml(x)}</div>`).join('');}
+async function saveBanner(){const message=$('bn-msg').value.trim();if(!message)return alert('Write a message first.');
+  const scope_type=$('bn-scope').value;const scope_values=scope_type==='all'?[]:[...document.querySelectorAll('#bn-which .chk-opt.on')].map(x=>x.dataset.v);
+  if(scope_type!=='all'&&!scope_values.length)return alert('Pick who should see it.');
+  const body={message,style:$('bn-style').value,scope_type,scope_values};
+  if(bnEditingId)await fetch('/api/manager/banners/'+bnEditingId,{method:'PUT',headers:H(),body:JSON.stringify(body)});
+  else await fetch('/api/manager/banners',{method:'POST',headers:H(),body:JSON.stringify(body)});
+  cancelBanner();loadBanners();}
+function editBanner(id){const b=banners.find(x=>x.id===id);if(!b)return;bnEditingId=id;
+  $('bn-msg').value=b.message;$('bn-style').value=b.style||'focus';$('bn-scope').value=b.scope_type;bnScopeWhich();
+  const sv=(b.scope_values||[]).map(String);document.querySelectorAll('#bn-which .chk-opt').forEach(el=>el.classList.toggle('on',sv.includes(el.dataset.v)));
+  $('bn-submit').textContent='Save changes';$('bn-cancel').style.display='inline-block';window.scrollTo(0,0);}
+function cancelBanner(){bnEditingId=null;$('bn-msg').value='';$('bn-scope').value='all';$('bn-style').value='focus';$('bn-which-wrap').style.display='none';$('bn-which').innerHTML='';$('bn-submit').textContent='Post banner';$('bn-cancel').style.display='none';}
+function bnScopeLabel(b){if(b.scope_type==='all')return'Everyone';if(b.scope_type==='employee')return b.scope_values.map(id=>(emps.find(e=>e.id===id)||{}).name||id).join(', ');return b.scope_values.join(', ');}
+function renderBanners(){if(!banners.length){$('bn-list').innerHTML='<div class="muted">No active banners — staff see none right now.</div>';return;}
+  $('bn-list').innerHTML=banners.map(b=>`<div class="rep"><div class="rep-msg">${escapeHtml(b.message)}</div><div class="rep-meta"><span class="chip c-${b.scope_type}">${escapeHtml(bnScopeLabel(b))}</span><span class="type-chip">${escapeHtml(b.style)}</span><a href="#" onclick="editBanner('${b.id}');return false" style="color:var(--teal);font-weight:700;margin-right:8px">edit</a><a href="#" onclick="removeBanner('${b.id}');return false" style="color:var(--red);font-weight:700">remove</a></div></div>`).join('');}
+async function removeBanner(id){if(bnEditingId===id)cancelBanner();await fetch('/api/manager/banners/'+id,{method:'DELETE',headers:H()});loadBanners();}
 // ---- Team-wide submission log ----
 async function loadSubs(){allSubs=await GET('/api/manager/submissions');renderSubs();}
 function toggle7(){last7=!last7;$('sf-7').classList.toggle('on',last7);renderSubs();}

@@ -54,6 +54,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .another-btn{background:var(--card);border:2px solid var(--border);color:var(--text);padding:11px 22px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
 .loading{text-align:center;padding:60px 20px;color:var(--muted)}
 .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.banner{border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14px;font-weight:600;line-height:1.4;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.banner-focus{background:var(--teal-l);color:var(--teal-d);border-left:4px solid var(--teal)}
+.banner-alert{background:#fef3c7;color:#92400e;border-left:4px solid #f59e0b}
+.banner-info{background:#eef2f6;color:#475569;border-left:4px solid #94a3b8}
+.draft-note{font-size:11px;color:var(--muted);text-align:center;margin-bottom:10px}
 </style></head><body>
 <header class="header"><div class="logo">METRO<br>PICKLEBALL</div><div class="header-title">Staff Portal</div><div class="header-sub">Daily check-in</div></header>
 <div class="wrap">
@@ -69,12 +74,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div></div>
   <div class="screen" id="s-daily">
     <button class="back-btn" onclick="show('s-select')">← Back</button>
+    <div id="banners"></div>
     <div class="emp-head"><div class="emp-av" id="d-av"></div><div><div style="font-weight:800;font-size:17px" id="d-name"></div><div style="font-size:12px;color:var(--muted)" id="d-role"></div></div></div>
     <div class="today-badge" id="d-today"></div>
-    <div class="shift-pick"><label>Which shift are you working today?</label><select id="d-shift" onchange="loadToday()"></select></div>
+    <div class="shift-pick"><label>Which shift are you working today?</label><select id="d-shift" onchange="onShiftChange()"></select></div>
+    <div class="draft-note">✔ Your entries save on this device automatically until you submit.</div>
     <div id="sections"></div>
     <div class="sec" style="--sc:var(--muted)"><div class="sec-t">📣 Report something to Nick and Brayden (optional)</div>
-      <textarea class="report-box" id="report" placeholder="Anything important? An issue, an idea, a heads-up…"></textarea></div>
+      <textarea class="report-box" id="report" placeholder="Anything important? An issue, an idea, a heads-up…" oninput="persistDraft()"></textarea></div>
     <button class="submit-btn" id="submit" onclick="submitDay()">Submit today ✓</button>
     <div id="resp-box" style="margin-top:14px"></div>
   </div>
@@ -110,19 +117,43 @@ async function saveNewPin(){if(pin.length<4){$('pin-err').textContent='Enter 4 d
   if(!r.ok){$('pin-err').textContent=r.error||'Could not save PIN.';return;}openDaily();}
 function openDaily(){$('d-av').style.background=sel.color;$('d-av').textContent=sel.init;$('d-name').textContent=sel.name;$('d-role').textContent=sel.role;
   $('d-today').textContent='Today · '+prettyToday();$('suc-name').textContent=sel.name;
+  $('report').value='';$('banners').innerHTML='';
   $('d-shift').innerHTML=shifts.map(s=>`<option value="${s.name}">${s.name} (${s.hours})</option>`).join('');loadToday();show('s-daily');}
 async function loadToday(){const shift=$('d-shift').value||shifts[0].name;
   const r=await (await fetch('/api/staff/'+sel.id+'/today?shift='+encodeURIComponent(shift)+'&date='+todayISO(),{headers:{'x-staff-pin':pin}})).json();
-  cur=r;renderSections(r);}
+  cur=r;applyDraft(r);renderSections(r);loadBanners();}
+function escapeHtmlS(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+// ---- draft persistence (per employee, per day, on this device) ----
+function draftKey(){return 'metro_draft_v1_'+(sel?sel.id:'x')+'_'+todayISO();}
+function loadDraftObj(){try{return JSON.parse(localStorage.getItem(draftKey()))||null;}catch(e){return null;}}
+function saveDraftObj(d){try{localStorage.setItem(draftKey(),JSON.stringify(d));}catch(e){}}
+function clearDraft(){try{localStorage.removeItem(draftKey());}catch(e){}}
+function collectDraft(){const values={},texts={};
+  document.querySelectorAll('#sections [data-task]').forEach(el=>values[el.dataset.id]=el.classList.contains('done')?1:0);
+  document.querySelectorAll('#sections [data-num]').forEach(el=>{if(el.value!=='')values[el.dataset.id]=Number(el.value);});
+  document.querySelectorAll('#sections [data-text]').forEach(el=>{if(el.value!=='')texts[el.dataset.id]=el.value;});
+  return {shift:$('d-shift').value,values,texts,report:$('report').value};}
+function persistDraft(){if(!sel)return;saveDraftObj(collectDraft());}
+function applyDraft(r){const d=loadDraftObj();if(!d)return;
+  if(d.values)for(const k in d.values)r.saved[k]=d.values[k];
+  if(d.texts)for(const k in d.texts)r.savedText[k]=d.texts[k];
+  if(d.report!=null)$('report').value=d.report;}
+function onShiftChange(){const d=collectDraft();
+  if(cur&&cur.items)cur.items.filter(it=>it.scope_type==='shift').forEach(it=>{delete d.values[it.id];delete d.texts[it.id];});
+  saveDraftObj(d);loadToday();}
+// ---- focus banners ----
+async function loadBanners(){try{const shift=$('d-shift').value||'';
+  const b=await (await fetch('/api/staff/'+sel.id+'/banners?shift='+encodeURIComponent(shift))).json();renderBanners(b);}catch(e){renderBanners([]);}}
+function renderBanners(list){$('banners').innerHTML=(list&&list.length)?list.map(b=>`<div class="banner banner-${b.style||'focus'}">📌 ${escapeHtmlS(b.message)}</div>`).join(''):'';}
 function esc(s){return String(s).replace(/"/g,'&quot;');}
 function itemRow(it,sv,st){
   const pri=it.high_priority?'<span class="pri-flag">★ High</span> ':'';
   const one=it.cadence==='onetime'?'<span class="badge">one-time</span> ':'';
   const isTask=it.kinds.includes('task'),isNum=it.kinds.includes('number'),isText=it.kinds.includes('text');
   let main;
-  if(isTask){const done=sv==1?'done':'';main=`<div class="sitem task ${done}" data-id="${it.id}" data-task="1" onclick="this.classList.toggle('done')"><div class="ck">✓</div><div class="ilabel">${pri}${one}${it.label}</div></div>`;}
-  else{const goal=it.goal!=null?` <span class="igoal">(goal ${it.goal})</span>`:'';const ctl=isNum?`<input class="numin" type="number" inputmode="numeric" min="0" data-id="${it.id}" data-num="1" value="${sv!=null&&sv!==''?sv:''}" placeholder="0">`:'';main=`<div class="sitem"><div class="ilabel">${pri}${one}${it.label}${goal}</div>${ctl}</div>`;}
-  const extra=isText?`<input class="txtin" data-id="${it.id}" data-text="1" placeholder="${esc(it.text_label||'Type here…')}" value="${esc(st||'')}">`:'';
+  if(isTask){const done=sv==1?'done':'';main=`<div class="sitem task ${done}" data-id="${it.id}" data-task="1" onclick="this.classList.toggle('done');persistDraft()"><div class="ck">✓</div><div class="ilabel">${pri}${one}${it.label}</div></div>`;}
+  else{const goal=it.goal!=null?` <span class="igoal">(goal ${it.goal})</span>`:'';const ctl=isNum?`<input class="numin" type="number" inputmode="numeric" min="0" data-id="${it.id}" data-num="1" value="${sv!=null&&sv!==''?sv:''}" placeholder="0" oninput="persistDraft()">`:'';main=`<div class="sitem"><div class="ilabel">${pri}${one}${it.label}${goal}</div>${ctl}</div>`;}
+  const extra=isText?`<input class="txtin" data-id="${it.id}" data-text="1" placeholder="${esc(it.text_label||'Type here…')}" value="${esc(st||'')}" oninput="persistDraft()">`:'';
   return `<div class="itemwrap">${main}${extra}</div>`;}
 function renderSections(r){const g={shift:[],group:[],all:[],employee:[]};r.items.forEach(it=>g[it.scope_type].push(it));
   const meta={shift:['🕑 My '+r.shift+' shift','var(--shift)'],group:['🎯 My team','var(--group)'],all:['👥 All staff','var(--all)'],employee:['⭐ Just me','var(--me)']};
@@ -135,7 +166,7 @@ async function submitDay(){const btn=$('submit');btn.disabled=true;btn.textConte
   document.querySelectorAll('[data-num]').forEach(el=>{if(el.value!=='')values[el.dataset.id]=Number(el.value);});
   document.querySelectorAll('[data-text]').forEach(el=>{if(el.value!=='')texts[el.dataset.id]=el.value;});
   try{const r=await (await fetch('/api/staff/'+sel.id+'/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin,date:todayISO(),shift:$('d-shift').value,values,texts,report:$('report').value})})).json();
-   if(!r.ok)throw 0;$('report').value='';show('s-success');
+   if(!r.ok)throw 0;clearDraft();$('report').value='';show('s-success');
   }catch{btn.disabled=false;btn.textContent='Submit today ✓';alert('Could not save. Check your connection and try again.');}}
 keypad();init();
 </script></body></html>

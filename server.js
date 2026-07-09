@@ -22,6 +22,9 @@ CREATE TABLE IF NOT EXISTS checkins(id TEXT PRIMARY KEY,employee_id TEXT,date TE
   ratings TEXT DEFAULT '[]',notes TEXT,created_at TEXT DEFAULT (datetime('now')));
 CREATE TABLE IF NOT EXISTS reports(id TEXT PRIMARY KEY,employee_id TEXT,date TEXT,category TEXT,
   message TEXT,status TEXT DEFAULT 'open',created_at TEXT DEFAULT (datetime('now')));
+CREATE TABLE IF NOT EXISTS banners(id TEXT PRIMARY KEY,message TEXT,style TEXT DEFAULT 'focus',
+  scope_type TEXT DEFAULT 'all',scope_values TEXT DEFAULT '[]',active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')));
 `);
 try{db.exec("ALTER TABLE employees ADD COLUMN responsibilities TEXT DEFAULT ''");}catch(e){}
 try{db.exec("ALTER TABLE items ADD COLUMN completion TEXT DEFAULT 'each'");}catch(e){}
@@ -120,6 +123,19 @@ app.get('/api/staff/:id/today',(req,res)=>{ if(!staffOk(req.params.id,req.header
    .forEach(r=>{saved[r.item_id]=r.value; if(r.text_value!=null) savedText[r.item_id]=r.text_value;});
  const emp=db.prepare('SELECT id,name,role,color,init,responsibilities FROM employees WHERE id=?').get(req.params.id);
  res.json({emp,date,shift,items,saved,savedText});});
+app.get('/api/staff/:id/banners',(req,res)=>{
+ const emp=db.prepare('SELECT id,groups FROM employees WHERE id=? AND active=1').get(req.params.id);
+ if(!emp) return res.json([]);
+ const groups=J(emp.groups); const shift=req.query.shift||'';
+ const applies=(b)=>{const sv=J(b.scope_values);
+  if(b.scope_type==='all') return true;
+  if(b.scope_type==='group') return sv.some(g=>groups.includes(g));
+  if(b.scope_type==='shift') return sv.includes(shift);
+  if(b.scope_type==='employee') return sv.includes(emp.id);
+  return false;};
+ const rows=db.prepare('SELECT * FROM banners WHERE active=1 ORDER BY created_at DESC').all().filter(applies)
+   .map(b=>({id:b.id,message:b.message,style:b.style||'focus',scope_type:b.scope_type}));
+ res.json(rows);});
 app.post('/api/staff/:id/submit',(req,res)=>{const{pin,date,shift,values,texts,report,reportCategory}=req.body||{};
  if(!staffOk(req.params.id,pin)) return res.status(401).json({error:'PIN required'}); const d=date||todayISO();
  const up=db.prepare(`INSERT INTO daily_entries(employee_id,date,shift,item_id,value,text_value) VALUES(?,?,?,?,?,?)
@@ -193,6 +209,18 @@ app.delete('/api/manager/items/:iid',requireManager,(q,res)=>{db.prepare('UPDATE
 app.get('/api/manager/reports',requireManager,(q,res)=>res.json(db.prepare('SELECT r.*,e.name FROM reports r JOIN employees e ON e.id=r.employee_id ORDER BY r.created_at DESC').all()));
 app.get('/api/manager/employee/:id/reports',requireManager,(req,res)=>res.json(db.prepare('SELECT * FROM reports WHERE employee_id=? ORDER BY created_at DESC').all(req.params.id)));
 app.put('/api/manager/reports/:rid',requireManager,(req,res)=>{db.prepare('UPDATE reports SET status=? WHERE id=?').run((req.body||{}).status||'resolved',req.params.rid);res.json({ok:true});});
+// focus banners
+app.get('/api/manager/banners',requireManager,(q,res)=>res.json(db.prepare('SELECT * FROM banners WHERE active=1 ORDER BY created_at DESC').all().map(b=>({...b,scope_values:J(b.scope_values)}))));
+app.post('/api/manager/banners',requireManager,(req,res)=>{const b=req.body||{}; if(!b.message||!String(b.message).trim())return res.status(400).json({error:'message'});
+ const id=uid(); db.prepare('INSERT INTO banners(id,message,style,scope_type,scope_values) VALUES(?,?,?,?,?)')
+  .run(id,String(b.message).trim(),b.style||'focus',b.scope_type||'all',JSON.stringify(b.scope_values||[]));
+ res.json({ok:true,id});});
+app.put('/api/manager/banners/:bid',requireManager,(req,res)=>{const cur=db.prepare('SELECT * FROM banners WHERE id=?').get(req.params.bid); if(!cur)return res.status(404).json({error:'no'});
+ const b=req.body||{};
+ db.prepare('UPDATE banners SET message=?,style=?,scope_type=?,scope_values=? WHERE id=?')
+  .run(b.message!==undefined?String(b.message).trim():cur.message,b.style||cur.style,b.scope_type||cur.scope_type,b.scope_values!==undefined?JSON.stringify(b.scope_values||[]):cur.scope_values,req.params.bid);
+ res.json({ok:true});});
+app.delete('/api/manager/banners/:bid',requireManager,(q,res)=>{db.prepare('UPDATE banners SET active=0 WHERE id=?').run(q.params.bid);res.json({ok:true});});
 // full submission log (what each person actually submitted, per date) — team-wide or per-employee
 function buildSubmissions(filterEmpId){
  const emps=db.prepare('SELECT id,name,role,color,init,groups FROM employees').all();
@@ -257,3 +285,4 @@ app.get('/api/manager/export/db',requireManager,(q,res)=>res.download(path.join(
 app.get('/manager',(q,r)=>r.sendFile(path.join(__dirname,'public','manager.html')));
 app.get('/',(q,r)=>r.sendFile(path.join(__dirname,'public','staff.html')));
 app.listen(PORT,()=>console.log('Metro Staff System v3 on '+PORT));
+// v4: focus banners + staff draft persistence
