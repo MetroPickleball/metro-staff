@@ -97,7 +97,7 @@ function itemsFor(empId,shiftName,date){
   return false;};
  return db.prepare('SELECT * FROM items WHERE active=1 ORDER BY high_priority DESC, sort_order').all().filter(it=>{
   if(!applies(it)) return false;
-  if(J(it.kinds).includes('task') && taskDone(it,empId,today)) return false;
+  if(J(it.kinds).includes('task') && (taskDone(it,empId,today)||skippedItem(it,empId,today))) return false;
   return true;
  }).map(it=>({...it,kinds:J(it.kinds),scope_values:J(it.scope_values),high_priority:!!it.high_priority}));
 }
@@ -244,7 +244,9 @@ function buildSubmissions(filterEmpId){
    if(r.shift)map[k].shift=r.shift; map[k].items.push({label:r.label,kinds:J(r.kinds),value:r.value,text_value:r.text_value,goal:r.goal});});
  reps.forEach(r=>{const k=key(r.eid,r.date); (map[k]||(map[k]={employee_id:r.eid,date:r.date,shift:'',items:[],reports:[]}));
    map[k].reports.push({id:r.id,category:r.category,message:r.message,status:r.status});});
- const list=Object.values(map).map(s=>({...s,emp:empMap[s.employee_id]||{name:'(removed)',groups:[],color:'#94a3b8',init:'?'}}));
+ const sk=db.prepare(`SELECT employee_id eid,date,source,label,reason FROM skip_log ${wr} ORDER BY created_at`).all(...p);
+ sk.forEach(r=>{const k=key(r.eid,r.date); (map[k]||(map[k]={employee_id:r.eid,date:r.date,shift:'',items:[],reports:[]})); (map[k].skips||(map[k].skips=[])).push({source:r.source,label:r.label,reason:r.reason});});
+ const list=Object.values(map).map(s=>({...s,skips:s.skips||[],emp:empMap[s.employee_id]||{name:'(removed)',groups:[],color:'#94a3b8',init:'?'}}));
  list.sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:0);
  return list;
 }
@@ -665,12 +667,95 @@ TOOLS.push(
    for_nick:{type:'string',description:'PRIVATE, shown only to Nick on the draft, never to the employee: anything that did not line up (e.g. sales logged vs CourtReserve, schedule mismatches), context, or what to watch. Plain and short.'}},required:['employee_id','summary','questions']},
   run:a=>{const r=draftNote(a,'claude');if(r.error)throw new Error(r.error);return {...r.note,status:'draft (waiting on Nick)'};},sum:a=>'Drafted management note for '+a.employee_id});
 
+
+// ===================================================================
+// v5.4: social person's Rollup view + 7-day social calendar
+// ===================================================================
+const SOCIAL_WEEK_TARGET=7, IDEAS_WEEK_TARGET=6;
+function socialWeek(empId,anchor){const days=weekDates(okDate(anchor)?anchor:localToday());const s=days[0],e=days[6];const today=localToday();const cards=allCards();
+ const inWk=d=>d&&d>=s&&d<=e;
+ const posted=cards.filter(c=>c.stage==='Posted'&&inWk(c.postedDate));
+ const onTime=posted.filter(c=>!c.postDate||c.postedDate<=c.postDate).length;
+ const planned=cards.filter(c=>inWk(c.postDate)).length;
+ const resDue=cards.filter(c=>c.stage==='Posted'&&c.postedDate&&inWk(addDaysISO(c.postedDate,7))&&addDaysISO(c.postedDate,7)<=today);
+ const acts=db.prepare('SELECT kind,date FROM social_activity WHERE employee_id=? AND date BETWEEN ? AND ? AND hidden=0').all(empId,s,e);
+ const emp=db.prepare('SELECT * FROM employees WHERE id=?').get(empId);const wd=empWorkdays(emp);
+ const workdaysSoFar=days.filter(d=>d<=today&&wd.includes(dowName(d)));
+ const reportDays=new Set(db.prepare('SELECT date FROM social_reports WHERE employee_id=? AND date BETWEEN ? AND ?').all(empId,s,e).map(r=>r.date));
+ return {weekOf:s,weekEnd:e,posted:posted.length,postedTarget:SOCIAL_WEEK_TARGET,postedOnTime:onTime,plannedToPost:planned,
+  resultsDue:resDue.length,resultsLogged:resDue.filter(c=>c.reach!=null).length,
+  ideasAdded:acts.filter(a=>a.kind==='idea-added').length,ideasTarget:IDEAS_WEEK_TARGET,
+  filmed:acts.filter(a=>a.kind==='filmed').length,edited:acts.filter(a=>a.kind==='edited').length,
+  reportsSubmitted:workdaysSoFar.filter(d=>reportDays.has(d)).length,reportsExpected:workdaysSoFar.length};}
+const stepOut=s=>({type:s.type,text:stepText(s),cardId:s.card?s.card.id:null,stage:s.card?STAGE_LABEL[s.card.stage]:null,late:!!s.late});
+app.get('/api/manager/employee/:id/social',requireManager,(req,res)=>{const emp=db.prepare('SELECT * FROM employees WHERE id=?').get(req.params.id);if(!emp)return res.status(404).json({error:'no'});
+ if(!isSocialEmp(emp))return res.json({social:false});const today=okDate(req.query.date)?req.query.date:localToday();const ns=nextShiftFor(emp,today);
+ const todaySteps=stepsFor(today,true);allCards().filter(c=>c.stage==='Posted'&&c.postedDate&&c.reach==null&&c.postedDate<=addDaysISO(today,-7)&&c.postedDate>=addDaysISO(today,-21))
+  .forEach(c=>{if(!todaySteps.find(s=>s.type==='Results'&&s.card&&s.card.id===c.id))todaySteps.push({type:'Results',card:c,late:true});});
+ res.json({social:true,today,nextShift:ns,workdays:empWorkdays(emp),todayPlan:todaySteps.map(stepOut),nextPlan:stepsFor(ns).map(stepOut),
+  nextManual:db.prepare("SELECT text FROM social_manual WHERE employee_id=? AND date=? AND list='next' AND active=1").all(emp.id,ns).map(r=>r.text),
+  doneToday:db.prepare("SELECT text FROM social_activity WHERE employee_id=? AND date=? AND hidden=0 AND kind NOT IN ('skipped','archived') ORDER BY created_at").all(emp.id,today).map(r=>r.text),
+  skippedToday:db.prepare("SELECT text FROM social_activity WHERE employee_id=? AND date=? AND hidden=0 AND kind IN ('skipped','archived') ORDER BY created_at").all(emp.id,today).map(r=>r.text),
+  pastPostDate:attention(today).pastPostDate.length,week:socialWeek(emp.id,today),lastWeek:socialWeek(emp.id,addDaysISO(today,-7)),
+  reports:db.prepare('SELECT * FROM social_reports WHERE employee_id=? ORDER BY created_at DESC LIMIT 10').all(emp.id).map(r=>({...r,worked:J(r.worked),next:J(r.next),nums:J(r.nums,{})}))});});
+// 7-day calendar: what posts each day on top, then the work planned or done that day
+function calendarWeek(start){const days=weekDates(okDate(start)?start:localToday());const cards=allCards();const idx=s=>STAGES.indexOf(s);
+ const acts=db.prepare(`SELECT a.date,a.kind,a.text,a.card_id,e.name FROM social_activity a LEFT JOIN employees e ON e.id=a.employee_id WHERE a.hidden=0 AND a.date BETWEEN ? AND ? ORDER BY a.created_at`).all(days[0],days[6]);
+ const man=db.prepare(`SELECT m.date,m.text,e.name FROM social_manual m LEFT JOIN employees e ON e.id=m.employee_id WHERE m.active=1 AND m.list='worked' AND m.date BETWEEN ? AND ?`).all(days[0],days[6]);
+ const mini=c=>({id:c.id,title:c.title,stage:c.stage,stageLabel:STAGE_LABEL[c.stage],reviewed:c.reviewed,postDate:c.postDate,postedDate:c.postedDate,reach:c.reach});
+ return {weekOf:days[0],today:localToday(),days:days.map(d=>({date:d,
+  posting:cards.filter(c=>(c.stage==='Posted'&&c.postedDate===d)||(c.stage!=='Posted'&&c.postDate===d)).map(c=>({...mini(c),posted:c.stage==='Posted',late:c.stage!=='Posted'&&d<localToday()})),
+  work:[...cards.filter(c=>c.filmDate===d).map(c=>({type:'Film',...mini(c),done:idx(c.stage)>idx('Filming')})),
+        ...cards.filter(c=>c.editDate===d).map(c=>({type:'Edit',...mini(c),done:idx(c.stage)>idx('Editing')})),
+        ...cards.filter(c=>c.stage==='Posted'&&c.postedDate&&addDaysISO(c.postedDate,7)===d).map(c=>({type:'Results',...mini(c),done:c.reach!=null}))],
+  log:[...acts.filter(a=>a.date===d).map(a=>({text:a.text,name:a.name})),...man.filter(m=>m.date===d).map(m=>({text:m.text,name:m.name}))]}))};}
+app.get('/api/manager/social/calendar',requireManager,(req,res)=>res.json(calendarWeek(req.query.start)));
+TOOLS.push(
+ {name:'get_social_week',read:true,description:'How the social media person did in a week against the social standards: videos posted vs the weekly target (7), posted on their target date, 7-day results logged, ideas added (target 6: 3 on Monday and 3 on Thursday), filmed/edited counts, and daily reports submitted vs workdays.',
+  inputSchema:{type:'object',properties:{employee_id:S_ID,week_of:D},required:['employee_id']},run:a=>socialWeek(a.employee_id,a.week_of)},
+ {name:'get_social_calendar',read:true,description:'The 7-day social calendar (Mon to Sun) for the week containing start: what posted or is set to post each day, the shoots, edits and results planned that day, and the log of what was actually done.',
+  inputSchema:{type:'object',properties:{start:D}},run:a=>calendarWeek(a.start)});
+
+// ===================================================================
+// v5.4: "Didn't do it" (with a reason) + archive a video (with a reason)
+// Nothing is ever deleted: skips are logged, archived videos are hidden and can be restored.
+// ===================================================================
+db.exec(`CREATE TABLE IF NOT EXISTS skip_log(id TEXT PRIMARY KEY,employee_id TEXT,date TEXT,source TEXT,item_id TEXT,card_id TEXT,label TEXT,reason TEXT,
+ created_at TEXT DEFAULT (datetime('now')));`);
+try{db.exec("ALTER TABLE social_cards ADD COLUMN archived_reason TEXT DEFAULT ''");}catch(e){}
+function skippedItem(it,empId,today){const dates=it.cadence==='weekly'?weekDates(today):it.cadence==='daily'?[today]:null;if(!dates)return false;
+ return !!db.prepare(`SELECT 1 FROM skip_log WHERE source='task' AND employee_id=? AND item_id=? AND date IN (${dates.map(()=>'?').join(',')}) LIMIT 1`).get(empId,it.id,...dates);}
+function logSkip(empId,date,source,itemId,cardId,label,reason){const r=String(reason||'').trim();if(r.length<3)return {error:'Please add a short reason.'};
+ db.prepare('INSERT INTO skip_log(id,employee_id,date,source,item_id,card_id,label,reason) VALUES(?,?,?,?,?,?,?,?)').run(uid(),empId,date,source,itemId||null,cardId||null,String(label||'').slice(0,200),r.slice(0,500));return {ok:true};}
+app.post('/api/staff/:id/skip',(req,res)=>{if(!staffOk(req.params.id,req.headers['x-staff-pin']))return res.status(401).json({error:'PIN required'});
+ const b=req.body||{};const date=okDate(b.date)?b.date:localToday();
+ if(b.source==='task'){const it=db.prepare('SELECT * FROM items WHERE id=?').get(b.item_id);if(!it)return res.status(404).json({error:'No such item'});
+  const r=logSkip(req.params.id,date,'task',it.id,null,it.label,b.reason);if(r.error)return res.status(400).json(r);return res.json(r);}
+ if(b.source==='social'){const emp=db.prepare('SELECT * FROM employees WHERE id=?').get(req.params.id);if(!isSocialEmp(emp))return res.status(403).json({error:'Not on social media'});
+  const c=getCard(b.card_id);if(!c)return res.status(404).json({error:'Video not found'});const step=['Film','Edit','Post','Results'].includes(b.step)?b.step:'Step';
+  if(b.new_date!==undefined&&b.new_date!==''&&!okDate(b.new_date))return res.status(400).json({error:'Bad date'});
+  const r=logSkip(req.params.id,date,'social',null,c.id,step+': '+c.title,b.reason);if(r.error)return res.status(400).json(r);
+  if(b.new_date){const col={Film:'filmDate',Edit:'editDate',Post:'postDate'}[step];if(col)patchCard(c.id,{[col]:b.new_date},'staff');}
+  logAct(req.params.id,date,'skipped',`Didn't do ${step.toLowerCase()} for ${c.title}: ${String(b.reason).trim()}${b.new_date?' (moved to '+prettyD(b.new_date)+')':''}`,c.id);return res.json({ok:true});}
+ res.status(400).json({error:'source must be task or social'});});
+function archiveCard(cid,empId,date,reason){const c=getCard(cid);if(!c)return {error:'Video not found'};const r=String(reason||'').trim();if(r.length<3)return {error:'Please add a short reason.'};
+ db.prepare("UPDATE social_cards SET active=0,archived_reason=?,updated_at=datetime('now') WHERE id=?").run(r.slice(0,500),cid);
+ logSkip(empId,date,'archive',null,cid,c.title,r);if(empId!=='manager')logAct(empId,date,'archived','Archived '+c.title+': '+r,cid);return {ok:true};}
+app.post('/api/staff/:id/social/cards/:cid/archive',(req,res)=>{if(!socialStaff(req,res))return;const r=archiveCard(req.params.cid,req.params.id,reqDate(req),(req.body||{}).reason);if(r.error)return res.status(400).json(r);res.json(r);});
+app.post('/api/manager/social/cards/:cid/archive',requireManager,(req,res)=>{const r=archiveCard(req.params.cid,'manager',reqDate(req),(req.body||{}).reason);if(r.error)return res.status(400).json(r);res.json(r);});
+app.get('/api/manager/social/archived',requireManager,(q,res)=>res.json(db.prepare("SELECT * FROM social_cards WHERE active=0 ORDER BY updated_at DESC").all().map(r=>({...cardOut(r),archivedReason:r.archived_reason||''}))));
+app.post('/api/manager/social/cards/:cid/restore',requireManager,(req,res)=>{db.prepare("UPDATE social_cards SET active=1,updated_at=datetime('now') WHERE id=?").run(req.params.cid);res.json({ok:true});});
+const skipsFor=(empId,days)=>db.prepare(`SELECT s.*,e.name FROM skip_log s LEFT JOIN employees e ON e.id=s.employee_id WHERE (? IS NULL OR s.employee_id=?) AND s.date>=? ORDER BY s.created_at DESC`).all(empId||null,empId||null,addDaysISO(localToday(),-(days||14)));
+app.get('/api/manager/skips',requireManager,(req,res)=>res.json(skipsFor(req.query.employee_id,Number(req.query.days)||30)));
+TOOLS.push({name:'get_skipped_items',read:true,description:'Items staff marked "didn\'t do it" (with their reason), social steps they skipped, and videos archived with a reason.',
+ inputSchema:{type:'object',properties:{employee_id:S_ID,days:{type:'number',description:'Last N days (default 14)'}}},run:a=>skipsFor(a.employee_id,Math.min(Number(a.days)||14,366))});
+
 const TOOL_MAP=Object.fromEntries(TOOLS.map(t=>[t.name,t]));
 const MCP_VERSIONS=['2025-06-18','2025-03-26','2024-11-05'];
 function mcpHandle(msg){const {id,method,params}=msg||{};const reply=result=>({jsonrpc:'2.0',id,result});const fail=(code,message)=>({jsonrpc:'2.0',id,error:{code,message}});
  if(id===undefined||id===null)return null; // notification
  if(method==='initialize'){const v=params&&MCP_VERSIONS.includes(params.protocolVersion)?params.protocolVersion:MCP_VERSIONS[0];
-  return reply({protocolVersion:v,capabilities:{tools:{listChanged:false}},serverInfo:{name:'metro-staff-portal',version:'5.1.0'},
+  return reply({protocolVersion:v,capabilities:{tools:{listChanged:false}},serverInfo:{name:'metro-staff-portal',version:'5.4.0'},
    instructions:'Metro Pickleball staff portal. Read team check-ins, reports, metrics and the social media board; make manager changes. Nothing can be deleted. Dates are YYYY-MM-DD, Eastern time. Management notes are drafts until Nick approves them in the manager dashboard.\n\n'+COACHING_GUIDE});}
  if(method==='ping')return reply({});
  if(method==='tools/list')return reply({tools:TOOLS.map(t=>({name:t.name,description:t.description,inputSchema:t.inputSchema,annotations:{readOnlyHint:!!t.read,destructiveHint:false}}))});
