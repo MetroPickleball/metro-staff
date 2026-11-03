@@ -30,10 +30,11 @@ try{db.exec("ALTER TABLE employees ADD COLUMN responsibilities TEXT DEFAULT ''")
 try{db.exec("ALTER TABLE items ADD COLUMN completion TEXT DEFAULT 'each'");}catch(e){}
 const uid=()=>crypto.randomBytes(5).toString('hex');
 const J=(s,d)=>{try{return JSON.parse(s)}catch{return d===undefined?[]:d}};
-const todayISO=()=>new Date().toISOString().slice(0,10);
+// Eastern-time 'today' (the server clock is UTC, which rolled evening check-ins into the next day)
+const todayISO=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 function weekDates(a){const d=new Date(a+'T00:00:00');const dow=(d.getDay()+6)%7;const m=new Date(d);m.setDate(d.getDate()-dow);
   return [...Array(7)].map((_,i)=>{const x=new Date(m);x.setDate(m.getDate()+i);return x.toISOString().slice(0,10)});}
-function lastDays(n){const out=[];for(let i=n-1;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);out.push(d.toISOString().slice(0,10))}return out;}
+function lastDays(n){const t=todayISO();const out=[];for(let i=n-1;i>=0;i--){const d=new Date(t+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-i);out.push(d.toISOString().slice(0,10))}return out;}
 
 // ---- SEED (fresh DB) ----
 if(db.prepare('SELECT COUNT(*) c FROM employees').get().c===0){
@@ -612,14 +613,15 @@ db.exec(`CREATE TABLE IF NOT EXISTS perf_notes(id TEXT PRIMARY KEY,employee_id T
 try{db.exec("ALTER TABLE perf_notes ADD COLUMN for_nick TEXT DEFAULT ''");}catch(e){}
 function perfFor(empId,anchor){const emp=db.prepare('SELECT * FROM employees WHERE id=?').get(empId);if(!emp)return null;
  const g=J(emp.groups);const dates=weekDates(okDate(anchor)?anchor:localToday());const inC=dates.map(()=>'?').join(',');
- const rows=db.prepare(`SELECT item_id,date,value FROM daily_entries WHERE employee_id=? AND date IN (${inC})`).all(empId,...dates);
- const shiftsWorked=new Set(rows.map(r=>r.date)).size;const byItem={};rows.forEach(r=>{(byItem[r.item_id]=byItem[r.item_id]||[]).push(r);});
- const applies=it=>{const sv=J(it.scope_values);return it.scope_type==='all'||(it.scope_type==='group'&&sv.some(x=>g.includes(x)))||(it.scope_type==='employee'&&sv.includes(empId))||!!byItem[it.id];};
+ const rows=db.prepare(`SELECT item_id,date,value,shift FROM daily_entries WHERE employee_id=? AND date IN (${inC})`).all(empId,...dates);
+ const shiftsWorked=new Set(rows.map(r=>r.date)).size;
+ const shiftDays={};rows.forEach(r=>{if(r.shift)(shiftDays[r.shift]=shiftDays[r.shift]||new Set()).add(r.date);});const byItem={};rows.forEach(r=>{(byItem[r.item_id]=byItem[r.item_id]||[]).push(r);});
+ const applies=it=>{const sv=J(it.scope_values);return it.scope_type==='all'||(it.scope_type==='group'&&sv.some(x=>g.includes(x)))||(it.scope_type==='employee'&&sv.includes(empId))||(it.scope_type==='shift'&&sv.some(s=>shiftDays[s]))||!!byItem[it.id];};
  const items=db.prepare('SELECT * FROM items WHERE active=1 ORDER BY high_priority DESC,sort_order').all().filter(applies);
  const metrics=[];let tDone=0,tTot=0;
  items.forEach(it=>{const k=J(it.kinds);const ent=byItem[it.id]||[];
   if(k.includes('number')){const actual=ent.reduce((a,r)=>a+(r.value||0),0);let expected=null;
-   if(it.goal!=null)expected=it.cadence==='weekly'?it.goal:it.cadence==='daily'?it.goal*shiftsWorked:null;
+   if(it.goal!=null){const n=it.scope_type==='shift'?J(it.scope_values).reduce((a,s)=>a+(shiftDays[s]?shiftDays[s].size:0),0):shiftsWorked;expected=it.cadence==='weekly'?it.goal:it.cadence==='daily'?it.goal*n:null;}
    metrics.push({label:it.label,actual,expected,goal:it.goal,cadence:it.cadence,highPriority:!!it.high_priority});}
   else if(k.includes('task')&&it.cadence==='daily'){ent.forEach(r=>{tTot++;if(r.value>=1)tDone++;});}});
  return {weekOf:dates[0],weekEnd:dates[6],shiftsWorked,metrics,tasks:{done:tDone,total:tTot}};}
