@@ -73,6 +73,20 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
 .sub-val{font-weight:700;color:var(--teal-d)}
 .subval-done{color:var(--green)}.subval-no{color:var(--muted)}
 .mini-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:11px;flex-shrink:0}
+.sm-attn{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+.sm-tile{background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:4px solid var(--tc)}.sm-tile .v{font-size:26px;font-weight:800}.sm-tile .l{font-size:12px;color:var(--muted)}.sm-tile .a{font-size:11px;font-weight:700;color:var(--tc);margin-top:3px}
+.sm-two{display:grid;grid-template-columns:1fr;gap:14px}@media(min-width:860px){.sm-two{grid-template-columns:1.25fr 1fr}}
+.sm-pipe{display:flex;height:28px;border-radius:8px;overflow:hidden;margin:8px 0}.sm-pipe div{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800}
+.sm-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}.sm-legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}
+.sm-line{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}.sm-line:last-child{border-bottom:none}.sm-line .t{flex:1;min-width:0;overflow-wrap:anywhere}
+.sm-pill{font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;white-space:nowrap}.p-rev{background:#fef3c7;color:#92400e}.p-ok{background:#d1fae5;color:#047857}.p-late{background:#fee2e2;color:#dc2626}.p-today{background:var(--teal-l);color:var(--teal-d)}.p-tag{background:#eef2f6;color:#475569}
+.sm-rep{border-bottom:1px solid #f1f5f9;padding:10px 0;font-size:13px}.sm-rep:last-child{border-bottom:none}.sm-rep ul{margin:2px 0 6px;padding-left:18px}.sm-nums{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}
+.sm-table{min-width:720px}.sm-table td{text-align:left;font-weight:400}.sm-table td:first-child{font-weight:700;max-width:280px}.sm-table tbody tr{cursor:pointer}.sm-table tbody tr:hover{background:#f8fafc}.sm-table th{text-align:left}
+.sm-bar{display:grid;grid-template-columns:minmax(100px,150px) 1fr 60px;gap:8px;align-items:center;font-size:12px;margin:8px 0}.sm-bar .trk{background:#eef2f6;border-radius:6px;height:16px;overflow:hidden}.sm-bar .trk div{height:100%;background:var(--teal);border-radius:6px}.sm-bar>b{text-align:right}
+.cn{border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:#fff}.cn-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.cn-perf{background:#f8fafc;border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:8px}.cn-perf div{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
+.cn textarea,.cn input{margin-bottom:6px}.cn-guide{white-space:pre-wrap;font-size:12px;color:var(--muted);background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:10px}
+#sm-scrim{position:fixed;inset:0;background:rgba(10,18,28,.5);z-index:40;display:none;justify-content:flex-end}#sm-drawer{background:var(--bg);width:min(460px,100%);height:100%;overflow:auto;padding:16px}
 </style></head><body>
 <div id="trend-tip" style="position:fixed;display:none;background:#1c2b3a;color:#fff;padding:6px 9px;border-radius:6px;font-size:12px;pointer-events:none;z-index:99"></div>
 <div id="login" class="login card">
@@ -84,9 +98,14 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
 </div>
 <div id="app" style="display:none">
 <div class="header"><div style="display:flex;align-items:center;gap:12px"><div class="logo">METRO</div><div class="htitle">Manager Dashboard</div></div><button class="btn ghost sm" onclick="location.reload()">↻ Refresh</button></div>
-<div class="tabs"><button class="tab active" data-t="team" onclick="mtab('team')">Team</button><button class="tab" data-t="roll" onclick="mtab('roll')">Rollup</button><button class="tab" data-t="admin" onclick="mtab('admin')">Tasks &amp; Metrics</button></div>
+<div class="tabs"><button class="tab active" data-t="team" onclick="mtab('team')">Team</button><button class="tab" data-t="roll" onclick="mtab('roll')">Rollup</button><button class="tab" data-t="admin" onclick="mtab('admin')">Tasks &amp; Metrics</button><button class="tab" data-t="social" onclick="mtab('social')">Social</button></div>
 <div class="wrap">
   <div class="panel active" id="p-team">
+    <div class="card" id="cn-card">
+      <div class="row" style="margin-bottom:6px"><div class="h2" style="margin:0">📝 Coaching notes</div><div><button class="btn ghost sm" onclick="cnGuideToggle()">How notes are written</button> <button class="btn sm" onclick="cnNew()">+ Write one</button></div></div>
+      <div class="muted" style="margin-bottom:10px">Claude drafts a weekly note for each person from their numbers. Nobody sees a note until you approve it here. It then shows on their check-in under "My week".</div>
+      <div id="cn-guide" class="cn-guide" style="display:none"></div><div id="cn-new"></div><div id="cn-list"><div class="muted">Loading…</div></div>
+    </div>
     <div class="card">
       <div class="row" style="margin-bottom:6px"><div class="h2" style="margin:0">📌 Focus banner</div></div>
       <div class="muted" style="margin-bottom:10px">Post a key update to the top of the staff portal. Choose who sees it — it stays up until you remove it.</div>
@@ -118,6 +137,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
       <div id="emp-form" style="display:none;border-top:1px solid var(--border);padding-top:12px;margin-top:10px">
         <div class="fg"><div><span class="lbl">Name</span><input class="in" id="e-name" placeholder="e.g. Dan"></div><div><span class="lbl">Job title</span><input class="in" id="e-role" placeholder="e.g. Front Desk"></div></div>
         <span class="lbl">Group(s)</span><div class="checks" id="e-groups" style="margin-bottom:10px"></div>
+        <span class="lbl">Workdays (used for the social media "next shift" plan)</span><div class="checks" id="e-workdays" style="margin-bottom:10px"></div>
         <span class="lbl">Copy setup from (optional — duplicates title, groups &amp; personal tasks)</span>
         <select class="in" id="e-copy" onchange="dupeFrom()"><option value="">— none (blank) —</option></select>
         <span class="lbl" style="margin-top:10px">Responsibilities (shown at the bottom of their staff check-in)</span><textarea class="in" id="e-resp" rows="3" placeholder="What this person is responsible for…"></textarea>
@@ -148,6 +168,10 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
       <div id="rev-history"></div></div>
     <div class="card"><div class="h2">📋 Responsibilities</div><div id="roll-resp" style="margin-top:8px"></div></div>
   </div>
+  <div class="panel" id="p-social">
+    <div class="period-switch" id="sm-nav" style="margin-bottom:14px;flex-wrap:wrap"><button class="period-btn active" data-s="dash" onclick="smTab('dash')">Dashboard</button><button class="period-btn" data-s="lib" onclick="smTab('lib')">Content library</button><button class="period-btn" data-s="ana" onclick="smTab('ana')">Analysis</button><button class="period-btn" data-s="guide" onclick="smTab('guide')">Guide</button></div>
+    <div id="ms-dash"><div class="muted">Loading…</div></div><div id="ms-lib" style="display:none"></div><div id="ms-ana" style="display:none"></div><div id="ms-guide" style="display:none"></div>
+  </div>
   <div class="panel" id="p-admin">
     <div class="card"><div class="h2">Add / edit a task or metric</div>
       <div class="fg"><div style="grid-column:1/3"><span class="lbl">Name</span><input class="in" id="a-label" placeholder="e.g. Membership sales"></div></div>
@@ -169,15 +193,15 @@ let teamReports=[],repsExpanded=false,allSubs=[],subsExpanded=false,last7=false,
 const $=id=>document.getElementById(id);const H=()=>({'x-manager-pin':MPIN,'Content-Type':'application/json'});
 const GET=u=>fetch(u,{headers:H()}).then(r=>r.json());
 async function doLogin(){MPIN=$('mpin').value.trim();const r=await fetch('/api/manager/dashboard',{headers:H()});if(r.status===401){$('loginerr').textContent='Wrong PIN.';return;}
-  emps=await r.json();groups=await GET('/api/manager/groups');shifts=await GET('/api/shifts');items=await GET('/api/manager/items');
+  emps=await r.json();groups=await GET('/api/manager/groups');if(!groups.includes('Social Media'))groups.push('Social Media');loadWorkdays();shifts=await GET('/api/shifts');items=await GET('/api/manager/items');
   $('login').style.display='none';$('app').style.display='block';renderTeam();buildRollSel();renderAdmin();$('rv-date').value=new Date().toISOString().slice(0,10);$('pv-shift').innerHTML=shifts.map(s=>'<option>'+s.name+'</option>').join('');
-  buildSubFilters();loadTeamReports();loadSubs();loadBanners();}
+  buildSubFilters();loadTeamReports();loadSubs();loadBanners();loadNotes();}
 function buildSubFilters(){$('sf-group').innerHTML='<option value="">All groups</option>'+groups.map(g=>`<option value="${g}">${g}</option>`).join('');
   $('sf-emp').innerHTML='<option value="">All people</option>'+emps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
   $('sf-shift').innerHTML='<option value="">All shifts</option>'+shifts.map(s=>`<option value="${s.name}">${s.name}</option>`).join('');}
 function exportCSV(){window.open('/api/manager/export/daily.csv?pin='+encodeURIComponent(MPIN));}
 function exportDB(){window.open('/api/manager/export/db?pin='+encodeURIComponent(MPIN));}
-function mtab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.t===t));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));$('p-'+t).classList.add('active');}
+function mtab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.t===t));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));$('p-'+t).classList.add('active');if(t==='social')loadSocialMgr();}
 async function refreshEmps(){emps=await GET('/api/manager/dashboard');}
 function hColor(h){return h>=70?'var(--green)':h>=40?'var(--amber)':'var(--red)';}
 function renderTeam(){$('team-list').innerHTML='<div class="team-grid">'+emps.map(e=>`<div class="tbox" style="--c:${e.color}"><div class="eh"><div class="av" style="background:${e.color}">${e.init}</div><div style="min-width:0"><div class="en">${e.name}</div><div class="er">${e.role}</div></div><div style="margin-left:auto;text-align:right"><div style="font-weight:800;font-size:15px;color:${e.health==null?'#94a3b8':hColor(e.health)}">${e.health==null?'—':e.health+'%'}</div></div></div><div class="healthbar"><div class="healthfill" style="width:${e.health==null?0:e.health}%;background:${e.health==null?'#e2e8f0':hColor(e.health)}"></div></div><div class="hstat" style="display:flex;justify-content:space-between"><span>T: <b>${e.tasks}</b></span><span>G: <b>${e.goals}</b></span><span>${e.submittedToday?'✓ today':'<span style="color:#94a3b8">—</span>'}</span></div><div class="tbox-btns"><button class="btn ghost sm" onclick="editEmp('${e.id}')">Edit</button><button class="btn ghost sm" onclick="resetPin('${e.id}','${e.name}')">⟳ PIN</button><button class="btn red sm" onclick="removeEmp('${e.id}')">Remove</button></div></div>`).join('')+'</div>';}
@@ -236,12 +260,12 @@ function renderSubs(){const f=filterSubs(allSubs);$('sub-filters').style.display
 function toggleAllSubs(){subsExpanded=!subsExpanded;renderSubs();}
 // employee CRUD
 function toggleEmpForm(){const f=$('emp-form');f.style.display=f.style.display==='none'?'block':'none';if(f.style.display==='block')empRefs();}
-function empRefs(){$('e-groups').innerHTML=groups.map(g=>`<div class="chk-opt" data-g="${g}" onclick="this.classList.toggle('on')">${g}</div>`).join('');$('e-copy').innerHTML='<option value="">— none (blank) —</option>'+emps.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('');}
+function empRefs(){renderWorkdayPicker(empEditingId);$('e-groups').innerHTML=groups.map(g=>`<div class="chk-opt" data-g="${g}" onclick="this.classList.toggle('on')">${g}</div>`).join('');$('e-copy').innerHTML='<option value="">— none (blank) —</option>'+emps.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('');}
 function dupeFrom(){const id=$('e-copy').value;if(!id)return;const e=emps.find(x=>x.id===id);$('e-role').value=e.role;$('e-resp').value=e.responsibilities||'';document.querySelectorAll('#e-groups .chk-opt').forEach(el=>el.classList.toggle('on',e.groups.includes(el.dataset.g)));$('e-note').textContent=' — copied '+e.name+"'s title, groups & personal tasks";}
 function editEmp(id){const e=emps.find(x=>x.id===id);empEditingId=id;$('emp-form').style.display='block';empRefs();$('e-name').value=e.name;$('e-role').value=e.role;$('e-resp').value=e.responsibilities||'';document.querySelectorAll('#e-groups .chk-opt').forEach(el=>el.classList.toggle('on',e.groups.includes(el.dataset.g)));$('e-submit').textContent='Save changes';$('e-cancel').style.display='inline-block';$('e-note').textContent=' — editing '+e.name;window.scrollTo(0,0);}
 async function saveEmp(){const name=$('e-name').value.trim();if(!name)return alert('Give them a name.');const role=$('e-role').value.trim()||'Staff';const gs=[...document.querySelectorAll('#e-groups .chk-opt.on')].map(x=>x.dataset.g);const resp=$('e-resp').value;
-  if(empEditingId){await fetch('/api/manager/employees/'+empEditingId,{method:'PUT',headers:H(),body:JSON.stringify({name,role,groups:gs,responsibilities:resp})});}
-  else{await fetch('/api/manager/employees',{method:'POST',headers:H(),body:JSON.stringify({name,role,groups:gs,responsibilities:resp,copyFrom:$('e-copy').value||null})});}
+  if(empEditingId){await fetch('/api/manager/employees/'+empEditingId,{method:'PUT',headers:H(),body:JSON.stringify({name,role,groups:gs,responsibilities:resp})});await saveWorkdays(empEditingId);}
+  else{const nr=await (await fetch('/api/manager/employees',{method:'POST',headers:H(),body:JSON.stringify({name,role,groups:gs,responsibilities:resp,copyFrom:$('e-copy').value||null})})).json();if(nr&&nr.id)await saveWorkdays(nr.id);}
   cancelEmp();await refreshEmps();items=await GET('/api/manager/items');renderTeam();buildRollSel();buildSubFilters();}
 function cancelEmp(){empEditingId=null;$('e-name').value='';$('e-role').value='';$('e-resp').value='';$('e-copy').value='';$('e-submit').textContent='Add employee';$('e-cancel').style.display='none';$('e-note').textContent='';document.querySelectorAll('#e-groups .chk-opt.on').forEach(el=>el.classList.remove('on'));$('emp-form').style.display='none';}
 async function removeEmp(id){const e=emps.find(x=>x.id===id);if(!confirm('Remove '+e.name+'? Their history is kept — this hides them.'))return;await fetch('/api/manager/employees/'+id,{method:'DELETE',headers:H()});await refreshEmps();renderTeam();buildRollSel();buildSubFilters();}
@@ -318,4 +342,138 @@ function scopeName(it){if(it.scope_type==='all')return['Everyone'];if(it.scope_t
 function renderAdmin(){const f=$('flt').value;$('flt-emp').style.display=f==='s-employee'?'inline-block':'none';if(f==='s-employee'&&!$('flt-emp').innerHTML)$('flt-emp').innerHTML='<option value="">Any person</option>'+emps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
   let list=items.filter(it=>it.active).filter(it=>{if(f==='all')return true;const st=f.slice(2);if(it.scope_type!==st)return false;if(st==='employee'){const pe=$('flt-emp').value;if(pe&&!it.scope_values.includes(pe))return false;}return true;});
   $('admin-list').innerHTML=list.map(it=>`<div class="item-row">${it.high_priority?'<div class="pribar"></div>':'<div class="pribar" style="background:transparent"></div>'}<div style="flex:1"><div style="margin-bottom:4px">${scopeName(it).map(s=>`<span class="chip c-${it.scope_type}">${s}</span>`).join('')}${it.high_priority?'<span class="pri-chip">⚑ High</span>':''}</div><div><b>${it.label}</b></div><div style="margin-top:3px">${it.kinds.map(k=>`<span class="type-chip">${k==='number'?'count':k}</span>`).join('')}<span class="type-chip">${it.cadence}</span>${it.completion==='shared'?'<span class="type-chip">shared</span>':''}${it.goal!=null?`<span class="type-chip">goal ${it.goal}</span>`:''}</div></div><div style="display:flex;flex-direction:column;gap:5px;justify-content:center"><button class="btn ghost sm" onclick="editItem('${it.id}')">Edit</button><button class="btn red sm" onclick="delItem('${it.id}')">Remove</button></div></div>`).join('')||'<div class="muted">No items match this filter.</div>';}
-</script></body></html>
+</script>
+<div id="sm-scrim" onclick="if(event.target===this)smClose()"><div id="sm-drawer" role="dialog" aria-modal="true"></div></div>
+<script>
+// ===== v5: Social tab + workdays + Claude connection =====
+let SM=null,smSub='dash',libFilter='open',libSearch='',smEditing=null,workdays={};
+const SM_STAGES=['Idea','Schedule Filming','Filming','Editing','Platform Schedule','Posted'];
+const SM_LABEL={'Idea':'Idea','Schedule Filming':'Needs a shoot date','Filming':'Filming','Editing':'Editing','Platform Schedule':'Ready to post','Posted':'Posted'};
+const SM_COLOR={'Idea':'#8b5cf6','Schedule Filming':'#ec4899','Filming':'#0ea5e9','Editing':'#6366f1','Platform Schedule':'#f59e0b','Posted':'#10b981'};
+const DAYS7=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+function mToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function mAdd(s,n){const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const mpd=(s,o)=>s?new Date(s+'T12:00:00').toLocaleDateString('en-US',o||{month:'short',day:'numeric'}):'';
+const mfmt=n=>n==null?'':Number(n).toLocaleString('en-US');
+async function loadSocialMgr(){try{SM=await GET('/api/manager/social?date='+mToday());}catch(e){$('ms-dash').innerHTML='<div class="card muted">Could not load social media data.</div>';return;}renderSM();}
+function smTab(s){smSub=s;document.querySelectorAll('#sm-nav .period-btn').forEach(b=>b.classList.toggle('active',b.dataset.s===s));['dash','lib','ana','guide'].forEach(x=>$('ms-'+x).style.display=x===s?'block':'none');renderSM();}
+function renderSM(){if(!SM)return;if(smSub==='dash')smDash();if(smSub==='lib')smLib();if(smSub==='ana')smAna();if(smSub==='guide')smGuide();}
+const smLate=c=>c.stage!=='Posted'&&c.postDate&&c.postDate<mToday();
+const smMeasured=()=>SM.cards.filter(c=>c.stage==='Posted'&&c.reach!=null&&!c.boosted);
+function smDash(){const T=mToday(),C=SM.cards;
+ const rev=C.filter(c=>c.reviewed==='Ready to review'&&c.stage!=='Posted'),late=C.filter(smLate),today=C.filter(c=>c.stage!=='Posted'&&c.postDate===T),
+  res=C.filter(c=>c.stage==='Posted'&&c.postedDate&&c.reach==null&&c.postedDate<=mAdd(T,-7)&&c.postedDate>=mAdd(T,-21));
+ const m=smMeasured(),s=m.map(c=>c.reach).sort((a,b)=>a-b),med=s.length?s[Math.floor(s.length/2)]:0,best=m.slice().sort((a,b)=>b.reach-a.reach)[0];
+ const open=SM_STAGES.slice(0,5).map(st=>[st,C.filter(c=>c.stage===st).length]);const posted=C.filter(c=>c.stage==='Posted').length;
+ const tile=(l,v,c,a)=>`<div class="sm-tile" style="--tc:${c}"><div class="v">${v}</div><div class="l">${l}</div>${a?`<div class="a">${a}</div>`:''}</div>`;
+ const rows=[...rev.map(c=>[c,'<span class="sm-pill p-rev">Review</span>']),...today.map(c=>[c,'<span class="sm-pill p-today">Today</span>']),...late.filter(c=>!rev.includes(c)&&!today.includes(c)).map(c=>[c,'<span class="sm-pill p-late">'+mpd(c.postDate)+'</span>'])];
+ $('ms-dash').innerHTML=`<div class="sm-attn">${tile('Waiting on your review',rev.length,'#f59e0b',rev.length?'Review below':'All clear')}${tile('Past post date, not posted',late.length,'#dc2626',late.length?'Chase these':'On track')}${tile('Posting today',today.length,'#00AEAE','')}${tile('Results to log',res.length,'#f59e0b',res.length?'7-day reach due':'Up to date')}</div>
+ <div class="sm-two"><div>
+  <div class="card"><div class="row" style="margin-bottom:4px"><div class="h2" style="margin:0">Production pipeline</div><span class="muted">${posted} posted all-time</span></div>
+   <div class="sm-pipe">${open.map(([st,n])=>n?`<div style="flex:${n};background:${SM_COLOR[st]}" title="${SM_LABEL[st]}: ${n}">${n}</div>`:'').join('')}</div>
+   <div class="sm-legend">${open.map(([st,n])=>`<span><i style="background:${SM_COLOR[st]}"></i>${SM_LABEL[st]} <b>${n}</b></span>`).join('')}</div></div>
+  <div class="card"><div class="row" style="margin-bottom:4px"><div class="h2" style="margin:0">Reach per video</div><span class="muted">oldest to newest</span></div>${smChart(m)}
+   <div class="sm-legend" style="margin-top:8px"><span>Measured <b>${m.length}</b></span><span>Typical (median) <b>${mfmt(med)}</b></span>${best?`<span>Best <b>${mfmt(best.reach)}</b> · ${escapeHtml(best.title)}</span>`:''}</div></div>
+  <div class="card"><div class="h2">Needs your attention</div>${rows.length?rows.map(([c,p])=>`<div class="sm-line">${p}<span class="t">${escapeHtml(c.title)}</span><button class="btn sm ${c.reviewed==='Ready to review'?'':'ghost'}" onclick="smOpen('${c.id}')">${c.reviewed==='Ready to review'?'Review':'Open'}</button></div>`).join(''):'<div class="muted">Nothing waiting on you.</div>'}</div>
+ </div><div>
+  <div class="card"><div class="h2">Daily social reports</div>${smReports()}</div>
+  <div class="card"><div class="row" style="margin-bottom:4px"><div class="h2" style="margin:0">🤖 Claude connection</div>${SM.claude.connected?'<span class="sm-pill p-ok">Connected</span>':'<span class="sm-pill p-tag">Not connected</span>'}</div>
+   <div class="muted" style="margin-bottom:8px">${SM.claude.connected?'Claude can read the portal and make manager changes. It can never delete anything, change employees or PINs, or download the database.':'To connect: in Claude, Settings → Connectors → Add custom connector, URL <b>'+location.origin+'/mcp</b>. You approve it here with the manager PIN.'}</div>
+   ${SM.claude.log.length?'<div class="muted" style="font-weight:700;margin:6px 0 2px">Recent Claude activity</div>'+SM.claude.log.slice(0,10).map(l=>`<div class="sm-line" style="font-size:12px"><span class="sm-pill ${l.is_write?'p-rev':'p-tag'}">${l.is_write?'change':'read'}</span><span class="t">${escapeHtml(l.summary==='Read'?l.tool.replace(/_/g,' '):l.summary)}${l.ok?'':' (failed)'}</span><span class="muted">${escapeHtml(String(l.at).slice(5,16))} UTC</span></div>`).join(''):''}
+   ${SM.claude.connected?'<button class="btn ghost sm" style="margin-top:10px" onclick="claudeDisconnect()">Disconnect Claude</button>':''}<span class="muted" id="cl-note"></span></div>
+ </div></div>`;}
+async function claudeDisconnect(){const b=event.target;if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Tap again to disconnect';setTimeout(()=>{b.dataset.armed='';b.textContent='Disconnect Claude';},3000);return;}
+ await fetch('/api/manager/claude/disconnect',{method:'POST',headers:H()});loadSocialMgr();}
+function smChart(m){const p=m.slice().sort((a,b)=>(a.postedDate||'').localeCompare(b.postedDate||''));if(!p.length)return '<div class="muted">No results logged yet.</div>';
+ const W=640,Hh=170,pl=40,pb=20,pt=8,cap=20000,top=Math.min(Math.max(...p.map(x=>x.reach)),cap),bw=(W-pl-6)/p.length,y=v=>pt+(Hh-pt-pb)*(1-Math.min(v,top)/top);
+ let s=`<svg viewBox="0 0 ${W} ${Hh}" style="width:100%;height:auto">`;[0,5000,10000,15000,20000].filter(t=>t<=top).forEach(t=>s+=`<line x1="${pl}" x2="${W-4}" y1="${y(t)}" y2="${y(t)}" stroke="#eef2f6"/><text x="${pl-5}" y="${y(t)+4}" text-anchor="end" font-size="10" fill="#94a3b8">${t?t/1000+'K':'0'}</text>`);
+ p.forEach((c,i)=>{const x=pl+i*bw+1,o=c.reach>cap;s+=`<rect x="${x}" y="${y(c.reach)}" width="${Math.max(bw-2,2)}" height="${Hh-pb-y(c.reach)}" rx="2" fill="${o?'#f59e0b':'#00AEAE'}"><title>${escapeHtml(c.title)}: ${mfmt(c.reach)}</title></rect>`;if(o)s+=`<text x="${x+bw/2}" y="${pt+10}" font-size="10" text-anchor="middle" fill="#92400e" font-weight="700">${Math.round(c.reach/1000)}K</text>`;});
+ return s+`<text x="${pl}" y="${Hh-5}" font-size="10" fill="#94a3b8">${mpd(p[0].postedDate)}</text><text x="${W-4}" y="${Hh-5}" font-size="10" text-anchor="end" fill="#94a3b8">${mpd(p[p.length-1].postedDate)}</text></svg>`;}
+function smReports(){if(!SM.reports.length)return '<div class="muted">No daily social reports yet. They show up here when the social media person submits their check-in.</div>';
+ return SM.reports.slice(0,8).map(r=>`<div class="sm-rep"><div class="muted" style="font-weight:700">${escapeHtml(r.name||'')} · ${mpd(r.date,{weekday:'short',month:'short',day:'numeric'})}</div>
+  <div class="sm-nums">${[['posted','posted'],['filmed','filmed'],['edited','edited'],['ideas','ideas'],['results','results logged']].map(([k,l])=>`<span class="sm-pill p-tag">${r.nums[k]??0} ${l}</span>`).join('')}</div>
+  <div style="font-weight:700;font-size:13px">Worked on</div>${r.worked.length?'<ul>'+r.worked.map(t=>`<li>${escapeHtml(t)}</li>`).join('')+'</ul>':'<div class="muted">Nothing logged</div>'}
+  <div style="font-weight:700;font-size:13px">Next shift · ${mpd(r.next_date,{weekday:'short',month:'short',day:'numeric'})}</div>${r.next.length?'<ul>'+r.next.map(t=>`<li>${escapeHtml(t)}</li>`).join('')+'</ul>':'<div class="muted">Nothing planned yet</div>'}
+  ${r.open_steps?`<div class="muted">${r.open_steps} shoot or edit step${r.open_steps>1?'s':''} still open</div>`:''}${r.needs?`<div style="color:#92400e;font-size:13px;margin-top:4px"><b>Needs:</b> ${escapeHtml(r.needs)}</div>`:''}</div>`).join('');}
+function smLib(){const f=libFilter,q=libSearch.toLowerCase();
+ let list=SM.cards.filter(c=>(f==='all'||(f==='open'&&c.stage!=='Posted')||(f==='posted'&&c.stage==='Posted')||(f==='review'&&c.reviewed==='Ready to review'&&c.stage!=='Posted'))&&(!q||c.title.toLowerCase().includes(q)));
+ list.sort((a,b)=>SM_STAGES.indexOf(a.stage)-SM_STAGES.indexOf(b.stage)||((b.postedDate||b.postDate||'').localeCompare(a.postedDate||a.postDate||'')));
+ $('ms-lib').innerHTML=`<div class="filterbar"><input class="in" id="lib-q" placeholder="Search titles" value="${escapeHtml(libSearch)}" style="max-width:240px" oninput="libSearch=this.value;smLib();const e=$('lib-q');e.focus();e.setSelectionRange(e.value.length,e.value.length)">
+  ${[['open','In progress'],['review','Needs review'],['posted','Posted'],['all','All']].map(([k,l])=>`<button class="period-btn ${f===k?'active':''}" onclick="libFilter='${k}';smLib()">${l}</button>`).join('')}<button class="btn sm" onclick="smOpen('new')">+ New idea</button></div>
+  <div class="card" style="padding:0;overflow-x:auto"><table class="sm-table"><thead><tr><th>Title</th><th>Stage</th><th>Review</th><th>Post date</th><th>Type</th><th>Reach</th><th>Shares</th></tr></thead><tbody>${list.map(c=>`<tr onclick="smOpen('${c.id}')">
+  <td>${escapeHtml(c.title)}</td><td><span class="sm-pill" style="background:${SM_COLOR[c.stage]};color:#fff">${SM_LABEL[c.stage]}</span></td><td>${c.reviewed==='Ready to review'&&c.stage!=='Posted'?'<span class="sm-pill p-rev">Waiting</span>':c.reviewed==='Reviewed'?'<span class="sm-pill p-ok">✓</span>':''}</td>
+  <td>${c.stage==='Posted'?mpd(c.postedDate):(c.postDate?mpd(c.postDate)+(smLate(c)?' <span class="sm-pill p-late">late</span>':''):'')}</td><td>${escapeHtml(c.type)}</td><td>${mfmt(c.reach)}</td><td>${mfmt(c.shares)}</td></tr>`).join('')}</tbody></table></div>
+  <div class="muted">${list.length} videos. Click a row to edit, approve or log results.</div>`;}
+function smSeries(t){t=t.toLowerCase();if(/coach|tip|lesson|split step/.test(t))return 'Coach tips & lessons';if(/broadcast/.test(t))return 'Broadcast clips';if(/gear|paddle/.test(t))return 'Gear & paddle reviews';
+ if(/mdto|mtdo|trophy|tournament|aloha|candy cane/.test(t))return 'Tournament content';if(/highlight/.test(t))return 'Staff & member highlights';return 'Other / one-offs';}
+function smAna(){const m=smMeasured();const g={};m.forEach(c=>{const k=smSeries(c.title);(g[k]=g[k]||[]).push(c);});
+ const rows=Object.entries(g).map(([k,v])=>{const r=v.map(c=>c.reach).sort((a,b)=>a-b);const sh=v.filter(c=>c.shares!=null),rs=sh.reduce((a,c)=>a+c.reach,0);return {k,n:v.length,med:r[Math.floor(r.length/2)],spk:rs?sh.reduce((a,c)=>a+c.shares,0)/rs*1000:null};}).sort((a,b)=>b.med-a.med);
+ const mx=Math.max(...rows.map(r=>r.med),1);const top=m.slice().sort((a,b)=>b.reach-a.reach).slice(0,5);const TAGK=[['type','Content type'],['hook','Hook type'],['length','Length'],['tone','Tone']];
+ const tagRows=k=>{const o={};m.filter(c=>c[k]).forEach(c=>{(o[c[k]]=o[c[k]]||[]).push(c.reach);});return Object.entries(o).map(([v,a])=>{a.sort((x,y)=>x-y);return [v,a.length,a[Math.floor(a.length/2)]];});};
+ $('ms-ana').innerHTML=`<div class="sm-two"><div><div class="card"><div class="h2">Typical reach by series</div><div class="muted" style="margin-bottom:8px">Median of ${m.length} measured posts, grouped by title. Faded bars have fewer than 5 videos.</div>
+  ${rows.map(r=>`<div class="sm-bar"><span><b>${r.k}</b><br><span class="muted">${r.n} videos${r.n<5?' · need more':''}</span></span><div class="trk"><div style="width:${Math.max(3,r.med/mx*100)}%;${r.n<5?'opacity:.4':''}"></div></div><b>${mfmt(r.med)}</b></div>`).join('')}</div>
+  <div class="card"><div class="h2">Shares per 1,000 reached</div>${rows.filter(r=>r.spk!=null).map(r=>`<div class="sm-bar"><span>${r.k}</span><div class="trk"><div style="width:${Math.min(100,r.spk/6*100)}%;background:#10b981"></div></div><b>${r.spk.toFixed(1)}</b></div>`).join('')||'<div class="muted">No shares logged yet.</div>'}</div></div>
+  <div><div class="card"><div class="h2">Top 5 posts</div>${top.map((c,i)=>`<div class="sm-line"><b>${i+1}</b><span class="t">${escapeHtml(c.title)}<br><span class="muted">${mpd(c.postedDate)}</span></span><b>${mfmt(c.reach)}</b></div>`).join('')}</div>
+  <div class="card"><div class="h2">By tag</div><div class="muted" style="margin-bottom:6px">Fills in as every new video gets tagged. Buckets under 5 videos are a hunch, not a result.</div>
+  ${TAGK.map(([k,l])=>{const tr=tagRows(k);return tr.length?`<div style="font-weight:700;font-size:13px;margin-top:8px">${l}</div>`+tr.map(([v,n,md])=>`<div class="sm-line" style="font-size:12px"><span class="t">${escapeHtml(v)} <span class="muted">(${n}${n<5?', need more':''})</span></span><b>${mfmt(md)}</b></div>`).join(''):'';}).join('')||'<div class="muted">No tagged posts with results yet.</div>'}</div></div></div>`;}
+function smGuide(){$('ms-guide').innerHTML=`<div class="card"><div class="h2">How the social media system works</div><div class="muted" style="margin-bottom:6px">This is the same guide the social media person sees on their Guide tab.</div>
+ <div style="font-size:14px;line-height:1.55"><p><b>Stages:</b> Idea → Needs a shoot date → Filming → Editing → Ready to post → Posted. The Complete button moves a video forward and asks for the date that step needs: a specific title for an idea, the shoot date, then the edit date. Completing Editing sends it to you for review.</p>
+ <p><b>Target post date, always.</b> Every Complete step asks for it if it's missing and lets them change it.</p><p><b>Their plan</b> (today and next shift) is built from shoot, edit and post dates and their workdays. Unfinished shoots and edits carry forward.</p>
+ <p><b>Daily report:</b> "What I worked on" and the five numbers fill in from what they completed. They can add or remove lines before submitting.</p>
+ <p><b>Results:</b> reach and shares logged 7 days after posting. Boosted posts are left out of the analysis.</p>
+ <p><b>Workdays</b> are set per person in the Team tab (Edit on their card).</p></div></div>`;}
+// editor (manager): approve / send back + full edit
+function smOpen(id){const c=id==='new'?{id:'new',title:'',stage:'Idea',reviewed:'',notes:''}:SM.cards.find(x=>x.id===id);if(!c)return;smEditing=id;const isNew=id==='new';const si=SM_STAGES.indexOf(c.stage);
+ $('sm-drawer').innerHTML=`<div class="row"><div class="h2" style="margin:0">${isNew?'New idea':'Video'}</div><button class="btn ghost sm" onclick="smClose()">Close</button></div>
+ ${!isNew&&c.reviewed==='Ready to review'&&c.stage!=='Posted'?`<div class="card" style="background:#fef3c7"><b>Waiting on your review</b><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="smReview('Reviewed')">Approve ✓</button><button class="btn ghost" onclick="smReview('')">Send back</button></div></div>`:''}
+ <div class="card"><span class="lbl">Title</span><input class="in" id="sf-title" value="${escapeHtml(c.title)}">
+  ${isNew?'':`<span class="lbl" style="margin-top:10px">Stage</span><select class="in" id="sf-stage">${SM_STAGES.map(s=>`<option value="${s}" ${s===c.stage?'selected':''}>${SM_LABEL[s]}</option>`).join('')}</select>`}
+  <div class="fg" style="margin-top:10px"><div><span class="lbl">Shoot date</span><input class="in" type="date" id="sf-film" value="${c.filmDate||''}"></div><div><span class="lbl">Edit date</span><input class="in" type="date" id="sf-edit" value="${c.editDate||''}"></div>
+  <div><span class="lbl">Target post date</span><input class="in" type="date" id="sf-post" value="${c.postDate||''}"></div><div><span class="lbl">Posted on</span><input class="in" type="date" id="sf-posted" value="${c.postedDate||''}"></div>
+  <div><span class="lbl">Reach (7-day)</span><input class="in" type="number" id="sf-reach" value="${c.reach??''}"></div><div><span class="lbl">Shares</span><input class="in" type="number" id="sf-shares" value="${c.shares??''}"></div></div>
+  <span class="lbl">Notes</span><textarea class="in" id="sf-notes" rows="3">${escapeHtml(c.notes||'')}</textarea></div>
+ <button class="btn" style="width:100%;padding:12px" onclick="smSave()">Save</button><div class="muted" id="sf-err" style="color:var(--red);margin-top:8px"></div>`;
+ $('sm-scrim').style.display='flex';}
+function smClose(){smEditing=null;$('sm-scrim').style.display='none';}
+async function smReq(method,url,body){const r=await fetch(url,{method,headers:H(),body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Could not save');return j;}
+async function smReview(v){try{await smReq('PUT','/api/manager/social/cards/'+smEditing,{reviewed:v});smClose();loadSocialMgr();}catch(e){$('sf-err').textContent=e.message;}}
+async function smSave(){const v=id=>$(id)?$(id).value:undefined;const o={title:v('sf-title').trim(),filmDate:v('sf-film')||null,editDate:v('sf-edit')||null,postDate:v('sf-post')||null,postedDate:v('sf-posted')||null,
+ reach:v('sf-reach')===''?null:Number(v('sf-reach')),shares:v('sf-shares')===''?null:Number(v('sf-shares')),notes:v('sf-notes')};if($('sf-stage'))o.stage=$('sf-stage').value;
+ if(!o.title){$('sf-err').textContent='Give it a title.';return;}
+ try{if(smEditing==='new')await smReq('POST','/api/manager/social/cards',{...o,date:mToday()});else await smReq('PUT','/api/manager/social/cards/'+smEditing,o);smClose();loadSocialMgr();}catch(e){$('sf-err').textContent=e.message;}}
+// workdays on the employee form
+async function loadWorkdays(){try{workdays=await GET('/api/manager/workdays');}catch(e){workdays={};}}
+function renderWorkdayPicker(empId){const w=(empId&&workdays[empId])||['Mon','Tue','Wed','Thu','Fri'];
+ $('e-workdays').innerHTML=DAYS7.map(d=>`<div class="chk-opt ${w.includes(d)?'on':''}" data-d="${d}" onclick="this.classList.toggle('on')">${d}</div>`).join('');}
+async function saveWorkdays(empId){const w=[...document.querySelectorAll('#e-workdays .chk-opt.on')].map(x=>x.dataset.d);if(!empId)return;
+ await fetch('/api/manager/employees/'+empId+'/workdays',{method:'PUT',headers:H(),body:JSON.stringify({workdays:w})});workdays[empId]=w;}
+</script>
+<script>
+// ===== v5.1: coaching notes (draft -> Nick approves) =====
+let NOTES=[],cnGuide='',cnShowAll=false;
+async function loadNotes(){try{const r=await GET('/api/manager/notes');NOTES=r.notes;cnGuide=r.guide;}catch(e){NOTES=[];}renderNotes();}
+function cnGuideToggle(){const g=$('cn-guide');g.textContent=cnGuide;g.style.display=g.style.display==='none'?'block':'none';}
+async function cnPerfHTML(empId,weekOf){try{const p=await GET('/api/manager/employee/'+empId+'/performance'+(weekOf?'?date='+weekOf:''));
+ const ms=p.metrics.filter(m=>m.goal!=null||m.actual>0);return `<div class="cn-perf"><b>Week of ${p.weekOf} · ${p.shiftsWorked} shifts</b>${ms.map(m=>`<div><span>${escapeHtml(m.label)}</span><b>${m.actual}${m.expected?' of '+m.expected:''}</b></div>`).join('')||'<div>No numbers logged</div>'}</div>`;}catch(e){return '';}}
+async function renderNotes(){const drafts=NOTES.filter(n=>n.status==='draft');const done=NOTES.filter(n=>n.status!=='draft');
+ let h=drafts.length?'':'<div class="muted" style="margin-bottom:8px">No drafts waiting on you.</div>';
+ for(const n of drafts){h+=`<div class="cn" id="cn-${n.id}"><div class="cn-h"><b>${escapeHtml(n.name)}</b><span class="muted">week of ${n.weekOf} · drafted by ${n.author==='claude'?'Claude':'you'}</span></div>${await cnPerfHTML(n.employeeId,n.weekOf)}
+  <span class="lbl">Win</span><input class="in" id="cw-${n.id}" value="${escapeHtml(n.win)}"><span class="lbl">Note</span><textarea class="in" rows="3" id="cs-${n.id}">${escapeHtml(n.summary)}</textarea>
+  <span class="lbl">Questions (one per line)</span><textarea class="in" rows="3" id="cq-${n.id}">${escapeHtml(n.questions.join('\n'))}</textarea>
+  <button class="btn sm" onclick="cnSet('${n.id}','approved')">Approve &amp; send</button> <button class="btn ghost sm" onclick="cnSet('${n.id}','draft')">Save edits</button> <button class="btn ghost sm" onclick="cnSet('${n.id}','returned')">Don't send</button></div>`;}
+ if(done.length){h+=`<div class="row" style="margin:10px 0 4px"><span class="lbl" style="margin:0">History</span><button class="btn ghost sm" onclick="cnShowAll=!cnShowAll;renderNotes()">${cnShowAll?'Show less':'Show all'}</button></div>`;
+  h+=(cnShowAll?done:done.slice(0,3)).map(n=>`<div class="rep" style="${n.status==='returned'?'opacity:.55':''}"><div class="rep-msg">${escapeHtml(n.summary)}</div><div class="rep-meta"><b>${escapeHtml(n.name)}</b> · week of ${n.weekOf} · ${n.status==='approved'?(n.seenAt?'✓ sent, seen':'✓ sent, not seen yet'):'not sent'}</div></div>`).join('');}
+ $('cn-list').innerHTML=h;}
+async function cnSet(id,status){const body={status,win:$('cw-'+id).value,summary:$('cs-'+id).value,questions:$('cq-'+id).value.split('\n')};
+ if(status==='approved'&&!body.summary.trim())return alert('The note is empty.');
+ await fetch('/api/manager/notes/'+id,{method:'PUT',headers:H(),body:JSON.stringify(body)});loadNotes();}
+function cnNew(){$('cn-new').innerHTML=`<div class="cn"><div class="cn-h"><b>New note</b><button class="btn ghost sm" onclick="$('cn-new').innerHTML=''">Cancel</button></div>
+ <select class="in" id="cn-emp" onchange="cnNewPerf()" style="margin-bottom:6px"><option value="">Who is it for?</option>${emps.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('')}</select><div id="cn-newperf"></div>
+ <span class="lbl">Win</span><input class="in" id="cn-win"><span class="lbl">Note</span><textarea class="in" rows="3" id="cn-sum"></textarea><span class="lbl">Questions (one per line)</span><textarea class="in" rows="3" id="cn-q"></textarea>
+ <button class="btn sm" onclick="cnCreate()">Save as draft</button></div>`;}
+async function cnNewPerf(){const id=$('cn-emp').value;$('cn-newperf').innerHTML=id?await cnPerfHTML(id):'';}
+async function cnCreate(){const employee_id=$('cn-emp').value;if(!employee_id)return alert('Pick who it is for.');
+ const r=await fetch('/api/manager/notes',{method:'POST',headers:H(),body:JSON.stringify({employee_id,win:$('cn-win').value,summary:$('cn-sum').value,questions:$('cn-q').value.split('\n')})});
+ if(!r.ok){const j=await r.json().catch(()=>({}));return alert(j.error||'Could not save');}$('cn-new').innerHTML='';loadNotes();}
+</script>
+</body></html>

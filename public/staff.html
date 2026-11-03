@@ -59,6 +59,56 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .banner-alert{background:#fef3c7;color:#92400e;border-left:4px solid #f59e0b}
 .banner-info{background:#eef2f6;color:#475569;border-left:4px solid #94a3b8}
 .draft-note{font-size:11px;color:var(--muted);text-align:center;margin-bottom:10px}
+.perf{background:var(--card);border-radius:12px;padding:14px 16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:4px solid var(--teal)}
+.perf-h{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer}.perf-h b{font-size:14px}
+.pm{padding:8px 0;border-bottom:1px solid #f1f5f9}.pm:last-child{border-bottom:none}.pm-top{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.pm-num{font-weight:800;white-space:nowrap}.pm-bar{height:7px;background:#eef2f6;border-radius:4px;margin-top:5px;overflow:hidden}.pm-bar div{height:100%;border-radius:4px}
+.pm-st{font-size:11px;font-weight:700;margin-top:3px}.note{background:var(--teal-l);border-radius:10px;padding:12px;margin-top:12px;font-size:14px;line-height:1.5}
+.note .win{font-weight:700;margin-bottom:4px}.note ol{margin:6px 0 0;padding-left:20px}.note .from{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--teal-d);margin-bottom:6px}
+[hidden]{display:none!important}
+.subtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--card);padding:5px;border-radius:12px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.subtabs button{border:none;background:none;padding:10px 6px;border-radius:9px;font-weight:700;font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit}
+.subtabs button.on{background:var(--teal-l);color:var(--teal-d)}
+.sec-t .hint{font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11px;float:right}
+.step{font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;color:#fff;margin-right:6px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.s-Film{background:#0ea5e9}.s-Edit{background:#6366f1}.s-Post{background:#10b981}.s-Ideas{background:#8b5cf6}.s-Results{background:#f59e0b}
+.cbtn{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0;cursor:pointer;font-family:inherit}
+.cbtn:hover{background:var(--teal-d)}.cbtn:disabled{background:#94a3b8}.cbtn.alt{background:#fff;color:var(--text);border:2px solid var(--border);padding:4px 9px}
+.addrow{display:flex;gap:8px;margin-top:10px}.addrow .in{flex:1;min-width:0}
+.in{width:100%;padding:9px 10px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff}.in:focus{outline:none;border-color:var(--teal)}
+.btn{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:8px 13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.wline{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:13px}.wline:last-child{border-bottom:none}
+.wline .t{flex:1;min-width:0;overflow-wrap:anywhere}.wline .x{background:none;border:none;color:var(--muted);font-size:17px;line-height:1;padding:0 4px;cursor:pointer}
+.src{font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0;margin-top:1px}
+.src-auto{background:var(--teal-l);color:var(--teal-d)}.src-me{background:#eef2f6;color:var(--muted)}
+.late-tag{color:#dc2626;font-size:11px;font-weight:700;margin-left:4px}.empty{color:var(--muted);font-size:13px;padding:6px 0}
+.more{font-size:12px;color:var(--teal-d);font-weight:700;background:none;border:none;padding:4px 0;cursor:pointer;font-family:inherit}
+.pill{font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;white-space:nowrap}.p-rev{background:#fef3c7;color:#92400e}.p-ok{background:#d1fae5;color:#047857}
+.p-late{background:#fee2e2;color:#dc2626}.p-today{background:var(--teal-l);color:var(--teal-d)}.p-tag{background:#eef2f6;color:#475569;font-size:12px;padding:5px 10px}.p-stage{color:#fff}
+.boardbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px}
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:3px;gap:3px}
+.seg button{border:none;background:none;padding:6px 11px;border-radius:7px;font-weight:700;font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit}.seg button.on{background:var(--teal);color:#fff}
+.lanes{display:flex;flex-direction:column;gap:12px}
+.lane{background:var(--card);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-top:4px solid var(--lc);overflow:hidden}
+.lane-h{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.8px}
+.lane-h .cnt{background:#f1f5f9;border-radius:10px;padding:1px 8px;font-size:11px}.lane-b{padding:0 10px 10px;display:flex;flex-direction:column;gap:8px}
+.vcard{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:10px 11px}.vcard>div[role=button]{cursor:pointer}.vcard:hover{border-color:var(--teal)}
+.vt{font-weight:700;font-size:13px;margin-bottom:5px;overflow-wrap:anywhere}.vm{display:flex;gap:5px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--muted)}
+.vfoot{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:8px}.vnext{font-size:11px;color:var(--muted)}
+@media (min-width:860px){.lanes{flex-direction:row;align-items:flex-start;overflow-x:auto;padding-bottom:6px}.lane{flex:0 0 230px}}
+.week{display:flex;flex-direction:column;gap:10px}.day{background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.07)}.day.is-today{outline:2px solid var(--teal)}
+.day-h{font-weight:800;font-size:13px;margin-bottom:6px;display:flex;justify-content:space-between}
+.dline{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:13px}.dline:last-child{border-bottom:none}.dline .t{flex:1;min-width:0;overflow-wrap:anywhere}.dline a{color:inherit}
+.scrim{position:fixed;inset:0;background:rgba(10,18,28,.5);z-index:40;display:flex;justify-content:flex-end}.scrim[hidden]{display:none}
+.drawer{background:var(--bg);width:min(460px,100%);height:100%;overflow:auto;padding:16px}
+.row-b{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.h2{font-size:17px;font-weight:800}.lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px;display:block}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}.fgrid .full{grid-column:1/-1}
+.stepper{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}.stepper button{border:1px solid var(--border);background:#fff;border-radius:20px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+.stepper button.on{background:var(--teal);border-color:var(--teal);color:#fff}.stepper button.past{color:var(--teal-d);border-color:var(--teal)}
+.cflow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;font-weight:700}.hintline{font-size:12px;color:var(--muted);margin:4px 0 10px}
+.err{color:#dc2626;font-size:13px;min-height:16px;margin-top:8px}.guide dt{font-weight:800;margin-top:12px}.guide dd{margin:3px 0 0;font-size:14px;line-height:1.5}.mix{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.s-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:var(--dark);color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;font-size:13px;z-index:60}.s-toast[hidden]{display:none}
 </style></head><body>
 <header class="header"><div class="logo">METRO<br>PICKLEBALL</div><div class="header-title">Staff Portal</div><div class="header-sub">Daily check-in</div></header>
 <div class="wrap">
@@ -76,14 +126,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <button class="back-btn" onclick="show('s-select')">← Back</button>
     <div id="banners"></div>
     <div class="emp-head"><div class="emp-av" id="d-av"></div><div><div style="font-weight:800;font-size:17px" id="d-name"></div><div style="font-size:12px;color:var(--muted)" id="d-role"></div></div></div>
+    <div class="subtabs" id="soc-tabs" hidden><button id="st-today" class="on" onclick="socTab('today')">Today</button><button id="st-board" onclick="socTab('board')">Content</button><button id="st-guide" onclick="socTab('guide')">Guide</button></div>
+    <div id="v-today">
     <div class="today-badge" id="d-today"></div>
+    <div class="perf" id="perf-box" hidden></div>
     <div class="shift-pick"><label>Which shift are you working today?</label><select id="d-shift" onchange="onShiftChange()"></select></div>
     <div class="draft-note">✔ Your entries save on this device automatically until you submit.</div>
+    <div class="sec" style="--sc:#ec4899" id="soc-plan" hidden><div class="sec-t">🎬 Today's plan <span class="hint">hit Complete as you finish each one</span></div><div id="soc-plan-list"></div></div>
     <div id="sections"></div>
-    <div class="sec" style="--sc:var(--muted)"><div class="sec-t">📣 Report something to Nick and Brayden (optional)</div>
+    <div class="sec" style="--sc:var(--green)" id="soc-worked" hidden><div class="sec-t">✅ What I worked on today <span class="hint">fills in as you complete things</span></div><div id="worked-list"></div>
+      <div class="addrow"><input class="in" id="add-worked" placeholder="Add something the board didn't catch" onkeydown="if(event.key==='Enter')addManual('worked')"><button class="btn" onclick="addManual('worked')">Add</button></div></div>
+    <div class="sec" style="--sc:#0ea5e9" id="soc-next" hidden><div class="sec-t"><span id="next-title">📅 Plan for next shift</span></div><div id="next-list"></div>
+      <div class="addrow"><input class="in" id="add-next" placeholder="Add something else for next shift" onkeydown="if(event.key==='Enter')addManual('next')"><button class="btn" onclick="addManual('next')">Add</button></div></div>
+    <div class="sec" style="--sc:var(--muted)"><div class="sec-t" id="report-title">📣 Report something to Nick and Brayden (optional)</div>
       <textarea class="report-box" id="report" placeholder="Anything important? An issue, an idea, a heads-up…" oninput="persistDraft()"></textarea></div>
     <button class="submit-btn" id="submit" onclick="submitDay()">Submit today ✓</button>
     <div id="resp-box" style="margin-top:14px"></div>
+    </div>
+    <div id="v-board" hidden></div><div id="v-guide" hidden></div>
   </div>
   <div class="screen" id="s-success"><div class="success-inner"><div class="success-icon">🎉</div><div class="success-title">Today's check-in saved!</div>
     <div class="success-sub">Nice work, <span id="suc-name"></span>. Nick sees your numbers roll up by week and month.</div>
@@ -117,11 +177,11 @@ async function saveNewPin(){if(pin.length<4){$('pin-err').textContent='Enter 4 d
   if(!r.ok){$('pin-err').textContent=r.error||'Could not save PIN.';return;}openDaily();}
 function openDaily(){$('d-av').style.background=sel.color;$('d-av').textContent=sel.init;$('d-name').textContent=sel.name;$('d-role').textContent=sel.role;
   $('d-today').textContent='Today · '+prettyToday();$('suc-name').textContent=sel.name;
-  $('report').value='';$('banners').innerHTML='';
-  $('d-shift').innerHTML=shifts.map(s=>`<option value="${s.name}">${s.name} (${s.hours})</option>`).join('');loadToday();show('s-daily');}
+  $('report').value='';$('banners').innerHTML='';{const sb=$('submit');sb.disabled=false;sb.textContent='Submit today ✓';}
+  $('d-shift').innerHTML=shifts.map(s=>`<option value="${s.name}">${s.name} (${s.hours})</option>`).join('');loadToday();show('s-daily');loadSocial();loadPerf();}
 async function loadToday(){const shift=$('d-shift').value||shifts[0].name;
   const r=await (await fetch('/api/staff/'+sel.id+'/today?shift='+encodeURIComponent(shift)+'&date='+todayISO(),{headers:{'x-staff-pin':pin}})).json();
-  cur=r;applyDraft(r);renderSections(r);loadBanners();}
+  cur=r;applyDraft(r);renderSections(r);loadBanners();if(typeof prefillSocialNums==='function')prefillSocialNums();}
 function escapeHtmlS(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 // ---- draft persistence (per employee, per day, on this device) ----
 function draftKey(){return 'metro_draft_v1_'+(sel?sel.id:'x')+'_'+todayISO();}
@@ -166,7 +226,187 @@ async function submitDay(){const btn=$('submit');btn.disabled=true;btn.textConte
   document.querySelectorAll('[data-num]').forEach(el=>{if(el.value!=='')values[el.dataset.id]=Number(el.value);});
   document.querySelectorAll('[data-text]').forEach(el=>{if(el.value!=='')texts[el.dataset.id]=el.value;});
   try{const r=await (await fetch('/api/staff/'+sel.id+'/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin,date:todayISO(),shift:$('d-shift').value,values,texts,report:$('report').value})})).json();
-   if(!r.ok)throw 0;clearDraft();$('report').value='';show('s-success');
+   if(!r.ok)throw 0;
+   if(SOC){const n={};for(const k in SOC_ITEMS)n[k]=values[SOC_ITEMS[k]]??0;try{await sapi('POST','/report',{nums:n,needs:$('report').value});}catch(e){}}
+   clearDraft();$('report').value='';btn.disabled=false;btn.textContent='Submit today ✓';show('s-success');
   }catch{btn.disabled=false;btn.textContent='Submit today ✓';alert('Could not save. Check your connection and try again.');}}
 keypad();init();
-</script></body></html>
+</script>
+<div class="scrim" id="scrim" hidden onclick="if(event.target===this)closeDrawer()"><div class="drawer" id="drawer" role="dialog" aria-modal="true"></div></div><div class="s-toast" id="s-toast" hidden></div>
+<script>
+// ===== v5: Social Media hub (only for people in the "Social Media" group) =====
+let SOC=null,socView='today',boardMode='board',showPosted=false,completing=null,editing=null;
+const STAGES=['Idea','Schedule Filming','Filming','Editing','Platform Schedule','Posted'];
+const STAGE_LABEL={'Idea':'Idea','Schedule Filming':'Needs a shoot date','Filming':'Filming','Editing':'Editing','Platform Schedule':'Ready to post','Posted':'Posted'};
+const STAGE_COLOR={'Idea':'#8b5cf6','Schedule Filming':'#ec4899','Filming':'#0ea5e9','Editing':'#6366f1','Platform Schedule':'#f59e0b','Posted':'#10b981'};
+const NEXT_STAGE={'Idea':'Schedule Filming','Schedule Filming':'Filming','Filming':'Editing','Editing':'Platform Schedule','Platform Schedule':'Posted'};
+const TAGS={type:['Game highlight','Coach tip','Member spotlight','Event/programming','Fun/culture','Promo'],people:['Coach','Member(s)','Staff','Owner','Pro player','No one'],
+ hook:['Question','Bold claim/stat','Visual action','Loud/sound','Swipe/transition','Relatable POV'],length:['Under 15s','15-30s','30-45s','45-60s','60s+'],
+ sound:['Original/natural','Trending audio','Voiceover','Music'],tone:['Informative','Funny/goofy','Hype','Heartfelt/personal'],cta:['None','Direct ask','Follow-for-more','Comment prompt','Link in bio']};
+const TAG_LABEL={type:'Content type',people:'People featured',hook:'Hook type',length:'Length',sound:'Sound',tone:'Tone',cta:'CTA'};
+const SOC_ITEMS={posted:'social_posted',filmed:'social_filmed',edited:'social_edited',ideas:'social_ideas',results:'social_results'};
+const escS=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function lToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function addD(s,n){const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const dow=s=>new Date(s+'T12:00:00').getDay();
+function pd(s,o){return s?new Date(s+'T12:00:00').toLocaleDateString('en-US',o||{month:'short',day:'numeric'}):'';}
+const fmtN=n=>n==null?'':Number(n).toLocaleString('en-US');
+function stoast(m){const t=$('s-toast');t.textContent=m;t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>t.hidden=true,2400);}
+async function sapi(method,path,body){const r=await fetch('/api/staff/'+sel.id+'/social'+path,{method,headers:{'Content-Type':'application/json','x-staff-pin':pin},body:body?JSON.stringify({...body,date:lToday()}):undefined});
+ const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Could not save. Check your connection.');return j;}
+const card=id=>SOC&&SOC.cards.find(c=>c.id===id);
+
+async function loadSocial(){SOC=null;$('soc-tabs').hidden=true;['soc-plan','soc-worked','soc-next'].forEach(i=>$(i).hidden=true);$('report-title').textContent='📣 Report something to Nick and Brayden (optional)';socTab('today');
+ try{const r=await fetch('/api/staff/'+sel.id+'/social?date='+lToday(),{headers:{'x-staff-pin':pin}});const j=await r.json();if(!j.social)return;SOC=j;}catch(e){return;}
+ $('soc-tabs').hidden=false;['soc-plan','soc-worked','soc-next'].forEach(i=>$(i).hidden=false);$('report-title').textContent='📣 Anything you need from Nick or Brayden? (optional)';renderSoc();}
+async function refreshSoc(){try{const r=await fetch('/api/staff/'+sel.id+'/social?date='+lToday(),{headers:{'x-staff-pin':pin}});const j=await r.json();if(j.social)SOC=j;}catch(e){}renderSoc();}
+function socTab(t){socView=t;['today','board','guide'].forEach(x=>{$('st-'+x).classList.toggle('on',x===t);});
+ $('v-today').hidden=t!=='today';$('v-board').hidden=t!=='board';$('v-guide').hidden=t!=='guide';
+ document.querySelector('.wrap').style.maxWidth=t==='board'?'1040px':'';if(SOC)renderSoc();}
+function renderSoc(){if(!SOC)return;if(socView==='today')renderSocToday();if(socView==='board')renderBoard();if(socView==='guide')$('v-guide').innerHTML=guideHTML();}
+
+function isLate(c){return c.stage!=='Posted'&&c.postDate&&c.postDate<lToday();}
+function needsResults(c){const t=lToday();return c.stage==='Posted'&&c.postedDate&&c.reach==null&&c.postedDate<=addD(t,-7)&&c.postedDate>=addD(t,-21);}
+function stepsFor(day,withLate){const out=[];const L=d=>withLate?(d&&d<=day):(d===day);
+ SOC.cards.forEach(c=>{if(c.stage==='Filming'&&L(c.filmDate))out.push({type:'Film',c,late:c.filmDate<day});
+  if(c.stage==='Editing'&&L(c.editDate))out.push({type:'Edit',c,late:c.editDate<day});
+  if(c.stage==='Platform Schedule'&&c.postDate===day)out.push({type:'Post',c});
+  if(c.stage==='Posted'&&c.postedDate&&c.reach==null&&addD(c.postedDate,7)===day)out.push({type:'Results',c});});
+ if(dow(day)===1||dow(day)===4)out.push({type:'Ideas',label:'Idea generation block (add 3+ ideas to the board)'});return out;}
+const stepText=s=>s.label||((s.type==='Results'?'Log 7-day reach + shares: ':s.type+': ')+s.c.title);
+function pills(c){let h='';if(c.reviewed==='Ready to review'&&c.stage!=='Posted')h+='<span class="pill p-rev">Waiting on Nick</span>';if(c.reviewed==='Reviewed'&&c.stage==='Platform Schedule')h+='<span class="pill p-ok">Approved</span>';
+ if(isLate(c))h+='<span class="pill p-late">Past post date</span>';if(c.stage!=='Posted'&&c.postDate===lToday())h+='<span class="pill p-today">Posts today</span>';return h;}
+
+function renderSocToday(){const T=lToday();const steps=stepsFor(T,true);
+ SOC.cards.filter(needsResults).forEach(c=>{if(!steps.find(s=>s.type==='Results'&&s.c===c))steps.push({type:'Results',c,late:true});});
+ const done=SOC.activity.filter(a=>a.kind!=='idea-added');const late=SOC.cards.filter(isLate);
+ let h=steps.length||done.length?'':'<div class="empty">Nothing dated for today. Open Content and hit Complete on the next video to give it a date.</div>';
+ h+=steps.map(s=>{const b=s.type==='Ideas'?`<button class="cbtn alt" onclick="socTab('board');newIdea()">+ Idea</button>`:s.type==='Results'?`<button class="cbtn" onclick="openCard('${s.c.id}',true)">Log</button>`:`<button class="cbtn" onclick="completeFlow('${s.c.id}')">Complete</button>`;
+  return `<div class="itemwrap"><div class="sitem"><div class="ilabel"><span class="step s-${s.type}">${s.type}</span>${escS(stepText(s))}${s.late?'<span class="late-tag">late</span>':''}</div>${b}</div></div>`;}).join('');
+ h+=done.map(a=>`<div class="itemwrap"><div class="sitem task done"><div class="ck">✓</div><div class="ilabel">${escS(a.text)}</div></div></div>`).join('');
+ if(late.length)h+=`<div class="itemwrap"><div class="ilabel" style="color:#dc2626;font-size:13px;font-weight:700">⚠ ${late.length} video${late.length>1?'s are':' is'} past the target post date and not marked posted. <button class="more" onclick="socTab('board')">Open board →</button></div></div>`;
+ $('soc-plan-list').innerHTML=h;
+ const W=SOC.activity,MW=SOC.manual.worked;
+ $('worked-list').innerHTML=(W.length||MW.length)?W.map(a=>`<div class="wline"><span class="src src-auto">auto</span><span class="t">${escS(a.text)}</span><button class="x" aria-label="Remove" onclick="hideAct('${a.id}')">×</button></div>`).join('')+
+  MW.map(m=>`<div class="wline"><span class="src src-me">added</span><span class="t">${escS(m.text)}</span><button class="x" aria-label="Remove" onclick="delManual('${m.id}')">×</button></div>`).join(''):'<div class="empty">Nothing yet. Every time you hit Complete, it shows up here.</div>';
+ const ns=SOC.nextShift;$('next-title').textContent='📅 Plan for next shift · '+pd(ns,{weekday:'long',month:'short',day:'numeric'});
+ const leftover=steps.filter(s=>s.type==='Film'||s.type==='Edit').length;const needDate=SOC.cards.filter(c=>c.stage==='Schedule Filming'&&!c.filmDate).length;
+ let nh=stepsFor(ns).map(s=>`<div class="wline"><span class="step s-${s.type}">${s.type}</span><span class="t">${escS(stepText(s))}</span></div>`).join('');
+ if(leftover)nh+=`<div class="wline"><span class="src src-auto">carry</span><span class="t">Any shoot or edit from today's plan you don't finish rolls to next shift.</span></div>`;
+ if(needDate)nh+=`<div class="wline"><span class="src src-auto">tip</span><span class="t">${needDate} video${needDate>1?'s still need':' still needs'} a shoot date. Hit Complete on them in Content.</span></div>`;
+ nh+=SOC.manual.next.map(m=>`<div class="wline"><span class="src src-me">added</span><span class="t">${escS(m.text)}</span><button class="x" aria-label="Remove" onclick="delManual('${m.id}')">×</button></div>`).join('');
+ $('next-list').innerHTML=nh||'<div class="empty">Nothing dated for next shift yet.</div>';
+ prefillSocialNums();}
+function autoNums(){const a={posted:0,filmed:0,edited:0,ideas:0,results:0};const m={posted:'posted',filmed:'filmed',edited:'edited','idea-added':'ideas',results:'results'};
+ (SOC?SOC.activity:[]).forEach(x=>{if(m[x.kind])a[m[x.kind]]++;});return a;}
+function prefillSocialNums(){if(!SOC)return;const a=autoNums();for(const k in SOC_ITEMS){const el=document.querySelector(`#sections [data-num][data-id="${SOC_ITEMS[k]}"]`);
+ if(el&&(el.value===''||el.dataset.auto==='1')&&a[k]){el.value=a[k];el.dataset.auto='1';}}}
+async function addManual(which){const el=$(which==='worked'?'add-worked':'add-next');const t=el.value.trim();if(!t)return;
+ try{await sapi('POST','/manual',{list:which,text:t});el.value='';await refreshSoc();}catch(e){stoast(e.message);}}
+async function delManual(id){try{await sapi('DELETE','/manual/'+id);await refreshSoc();}catch(e){stoast(e.message);}}
+async function hideAct(id){try{await sapi('POST','/activity/'+id+'/hide');await refreshSoc();}catch(e){stoast(e.message);}}
+
+function renderBoard(){let h=`<div class="boardbar"><span class="seg"><button class="${boardMode==='board'?'on':''}" onclick="boardMode='board';renderBoard()">Board</button><button class="${boardMode==='week'?'on':''}" onclick="boardMode='week';renderBoard()">This week</button></span><button class="btn" onclick="newIdea()">+ New idea</button></div>`;
+ if(boardMode==='board'){h+='<div class="lanes">'+STAGES.map(st=>{let list=SOC.cards.filter(c=>c.stage===st);
+   list=st==='Posted'?list.sort((a,b)=>(b.postedDate||'').localeCompare(a.postedDate||'')):list.sort((a,b)=>(a.postDate||'9999').localeCompare(b.postDate||'9999'));
+   const shown=st==='Posted'&&!showPosted?list.slice(0,5):list;
+   return `<section class="lane" style="--lc:${STAGE_COLOR[st]}"><div class="lane-h"><span>${STAGE_LABEL[st]}</span><span class="cnt">${list.length}</span></div><div class="lane-b">${shown.map(cardHTML).join('')||'<div class="empty">Nothing here</div>'}${st==='Posted'&&list.length>5?`<button class="more" onclick="showPosted=!showPosted;renderBoard()">${showPosted?'Show fewer':'Show all '+list.length}</button>`:''}</div></section>`;}).join('')+'</div>';}
+ else{const T=lToday();const start=addD(T,-((dow(T)+6)%7));const wd=SOC.workdays||[];const DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];h+='<div class="week">';
+  for(let i=0;i<7;i++){const day=addD(start,i);const st=stepsFor(day);
+   h+=`<div class="day ${day===T?'is-today':''}"><div class="day-h"><span>${pd(day,{weekday:'long',month:'short',day:'numeric'})}</span>${day===T?'<span class="pill p-today">Today</span>':''}</div>`+
+   (st.length?st.map(s=>`<div class="dline"><span class="step s-${s.type}">${s.type}</span><span class="t">${s.c?`<a href="#" onclick="openCard('${s.c.id}');return false">${escS(s.c.title)}</a>`:escS(s.label)}</span>${s.c&&s.type!=='Results'&&day<=T?`<button class="cbtn" onclick="completeFlow('${s.c.id}')">Complete</button>`:''}</div>`).join(''):'<div class="empty">'+(wd.includes(DN[dow(day)])?'Open day':'Off')+'</div>')+'</div>';}
+  const und=SOC.cards.filter(c=>c.stage==='Schedule Filming'&&!c.filmDate);
+  if(und.length)h+=`<div class="day"><div class="day-h"><span>Needs a shoot date</span><span class="pill p-tag">${und.length}</span></div>${und.map(c=>`<div class="dline"><span class="step s-Film">Film</span><span class="t"><a href="#" onclick="openCard('${c.id}');return false">${escS(c.title)}</a></span><button class="cbtn" onclick="completeFlow('${c.id}')">Set date</button></div>`).join('')}</div>`;
+  h+='</div>';}
+ $('v-board').innerHTML=h;}
+function cardHTML(c){const date=c.stage==='Posted'?(c.postedDate?'Posted '+pd(c.postedDate):''):(c.postDate?'Post '+pd(c.postDate):'No post date');
+ const nx=c.stage==='Filming'&&c.filmDate?'Shoot '+pd(c.filmDate):c.stage==='Editing'&&c.editDate?'Edit '+pd(c.editDate):'';
+ return `<div class="vcard"><div role="button" tabindex="0" onclick="openCard('${c.id}')" onkeydown="if(event.key==='Enter')openCard('${c.id}')"><div class="vt">${escS(c.title)}</div><div class="vm"><span>${date}</span>${nx?`<span>· ${nx}</span>`:''}${c.reach!=null?`<span>· ${fmtN(c.reach)} reach</span>`:''}${pills(c)}</div></div>
+  ${c.stage!=='Posted'?`<div class="vfoot"><span class="vnext">Next: ${STAGE_LABEL[NEXT_STAGE[c.stage]]}</span><button class="cbtn" onclick="completeFlow('${c.id}')">Complete ✓</button></div>`:needsResults(c)?`<div class="vfoot"><span class="vnext">Results due</span><button class="cbtn alt" onclick="openCard('${c.id}',true)">Log results</button></div>`:''}</div>`;}
+
+// ---- Complete: next stage + the date it needs; target post date always ----
+function completeFlow(id){const c=card(id);if(!c||c.stage==='Posted')return;completing=id;editing=null;const to=NEXT_STAGE[c.stage];const T=lToday();const f=[];
+ if(c.stage==='Idea')f.push(`<label class="lbl" for="cf-title">Make the title specific</label><input class="in" id="cf-title" value="${escS(c.title)}"><p class="hintline">Who is in it, what they do, and the angle. "Coach Tip: stacking with Holly" beats "Coach tip".</p>`);
+ if(c.stage==='Schedule Filming')f.push(`<label class="lbl" for="cf-film">Shoot date</label><input class="in" type="date" id="cf-film" value="${c.filmDate||''}" min="${T}"><p class="hintline">This puts the shoot on your plan for that day.</p>`);
+ if(c.stage==='Filming')f.push(`<label class="lbl" for="cf-edit">What day will you edit it?</label><input class="in" type="date" id="cf-edit" value="${c.editDate&&c.editDate>=T?c.editDate:''}" min="${T}"><p class="hintline">This puts the edit on your plan for that day.</p>`);
+ if(c.stage==='Editing')f.push(`<p class="hintline" style="margin-top:0">It goes to Nick for review and moves to Ready to post.</p>`);
+ if(c.stage==='Platform Schedule')f.push(`<label class="lbl" for="cf-posted">Posted on</label><input class="in" type="date" id="cf-posted" value="${T}" max="${T}"><p class="hintline">You'll get a reminder to log reach and shares 7 days after this date.</p>${c.reviewed!=='Reviewed'?'<p class="hintline" style="color:#92400e;font-weight:700">Heads up: Nick hasn\'t approved this one yet.</p>':''}`);
+ if(c.stage!=='Platform Schedule')f.push(`<label class="lbl" for="cf-post">Target post date${c.postDate?'':' (required)'}</label><input class="in" type="date" id="cf-post" value="${c.postDate||''}"><p class="hintline">${c.postDate?'Change it here if the plan moved.':'Every video needs a target post date.'}</p>`);
+ $('drawer').innerHTML=`<div class="row-b"><span class="h2">Complete</span><button class="cbtn alt" onclick="closeDrawer()">Cancel</button></div>
+  <div class="card"><div style="font-weight:800;font-size:15px;margin-bottom:8px">${escS(c.title)}</div>
+  <div class="cflow"><span class="pill p-stage" style="background:${STAGE_COLOR[c.stage]}">${STAGE_LABEL[c.stage]}</span>→<span class="pill p-stage" style="background:${STAGE_COLOR[to]}">${STAGE_LABEL[to]}</span></div>${f.join('')}</div>
+  <button class="submit-btn" id="cf-go" onclick="applyComplete()">Complete and move to ${STAGE_LABEL[to]}</button><p class="err" id="cf-err"></p>`;
+ $('scrim').hidden=false;setTimeout(()=>{const i=$('drawer').querySelector('input');if(i)i.focus();},50);}
+async function applyComplete(){const c=card(completing);if(!c)return;const v=id=>($(id)||{}).value||'';const b=$('cf-go');
+ const body={title:v('cf-title')||undefined,filmDate:v('cf-film')||undefined,editDate:v('cf-edit')||undefined,postDate:v('cf-post')||undefined,postedDate:v('cf-posted')||undefined};
+ if(c.stage!=='Platform Schedule'&&!body.postDate){$('cf-err').textContent='Pick a target post date first.';return;}
+ b.disabled=true;try{const r=await sapi('POST','/cards/'+completing+'/complete',body);closeDrawer();stoast('Moved to '+STAGE_LABEL[r.moved.to]);await refreshSoc();}
+ catch(e){$('cf-err').textContent=e.message;b.disabled=false;}}
+function closeDrawer(){completing=null;editing=null;$('scrim').hidden=true;}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('scrim').hidden)closeDrawer();});
+
+// ---- full edit (tags, results, notes) ----
+function newIdea(){editing='new';completing=null;drawEditor({id:'new',title:'',stage:'Idea',reviewed:'',boosted:false,notes:''});}
+function openCard(id,focusResults){const c=card(id);if(!c)return;editing=id;completing=null;drawEditor(c,focusResults);}
+function drawEditor(c,focusResults){const isNew=c.id==='new';const si=STAGES.indexOf(c.stage);
+ const sel2=k=>`<div><label class="lbl" for="f-${k}">${TAG_LABEL[k]}</label><select class="in" id="f-${k}"><option value="">Pick one</option>${TAGS[k].map(x=>`<option ${c[k]===x?'selected':''}>${escS(x)}</option>`).join('')}</select></div>`;
+ $('drawer').innerHTML=`<div class="row-b"><span class="h2">${isNew?'New idea':'Video'}</span><button class="cbtn alt" onclick="closeDrawer()">Close</button></div>
+ <div class="card"><label class="lbl" for="f-title">Title / idea</label><input class="in" id="f-title" value="${escS(c.title)}" placeholder="e.g. Coach Tip: stacking with Holly">
+  ${isNew?'':`<label class="lbl" style="margin-top:12px">Stage <span style="text-transform:none;letter-spacing:0;font-weight:600">(use Complete to move forward; tap here only to fix a mistake)</span></label><div class="stepper" id="f-stage">${STAGES.map((s,i)=>`<button type="button" data-v="${s}" class="${i===si?'on':i<si?'past':''}" onclick="pickStage(this)">${STAGE_LABEL[s]}</button>`).join('')}</div>`}
+  <div class="fgrid"><div><label class="lbl" for="f-film">Shoot date</label><input class="in" type="date" id="f-film" value="${c.filmDate||''}"></div>
+  <div><label class="lbl" for="f-edit">Edit date</label><input class="in" type="date" id="f-edit" value="${c.editDate||''}"></div>
+  <div><label class="lbl" for="f-post">Target post date</label><input class="in" type="date" id="f-post" value="${c.postDate||''}"></div>
+  <div><label class="lbl" for="f-posted">Posted on</label><input class="in" type="date" id="f-posted" value="${c.postedDate||''}"></div></div>
+  ${isNew?'':`<div class="row-b" style="margin:4px 0 0">${c.reviewed==='Reviewed'?'<span class="pill p-ok">Approved by Nick ✓</span>':c.reviewed==='Ready to review'?'<span class="pill p-rev">Waiting on Nick</span>':'<span class="vnext">Not sent to Nick yet</span>'}
+   ${c.reviewed===''&&c.stage!=='Posted'?'<button class="cbtn alt" onclick="sendReview()">Send to Nick for review</button>':''}</div>`}</div>
+ <div class="card"><div class="sec-t">Tags <span class="hint">one pick each, every video</span></div><div class="fgrid">${Object.keys(TAGS).map(sel2).join('')}
+  <div class="full"><label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="f-boost" ${c.boosted?'checked':''}> Boosted with ad money (left out of organic analysis)</label></div></div></div>
+ <div class="card" id="res-card"><div class="sec-t">Results <span class="hint">log 7 days after posting${c.postedDate?' · due '+pd(addD(c.postedDate,7)):''}</span></div>
+  <div class="fgrid"><div><label class="lbl" for="f-reach">Reach (7-day)</label><input class="in" type="number" min="0" id="f-reach" value="${c.reach??''}"></div>
+  <div><label class="lbl" for="f-shares">Shares</label><input class="in" type="number" min="0" id="f-shares" value="${c.shares??''}"></div></div></div>
+ <div class="card"><label class="lbl" for="f-notes">Notes (hook / CTA wording, angle, permissions)</label><textarea class="txtin" id="f-notes" rows="3">${escS(c.notes)}</textarea></div>
+ <button class="submit-btn" id="f-save" onclick="saveCard()">Save</button><p class="err" id="f-err"></p>`;
+ $('scrim').hidden=false;if(focusResults)setTimeout(()=>{$('res-card').scrollIntoView();$('f-reach').focus();},60);else if(isNew)setTimeout(()=>$('f-title').focus(),60);}
+function pickStage(b){b.parentNode.querySelectorAll('button').forEach(x=>x.classList.remove('on','past'));b.classList.add('on');let p=b.previousElementSibling;while(p){p.classList.add('past');p=p.previousElementSibling;}}
+function readEditor(){const o={title:$('f-title').value.trim(),filmDate:$('f-film').value||null,editDate:$('f-edit').value||null,postDate:$('f-post').value||null,postedDate:$('f-posted').value||null,
+ boosted:$('f-boost').checked,notes:$('f-notes').value,reach:$('f-reach').value===''?null:Number($('f-reach').value),shares:$('f-shares').value===''?null:Number($('f-shares').value)};
+ Object.keys(TAGS).forEach(k=>o[k]=$('f-'+k).value);const st=$('f-stage')&&$('f-stage').querySelector('.on');if(st)o.stage=st.dataset.v;return o;}
+async function saveCard(){const o=readEditor();if(!o.title){$('f-err').textContent='Give it a title so it shows up on the board.';return;}$('f-save').disabled=true;
+ try{if(editing==='new')await sapi('POST','/cards',o);else await sapi('PUT','/cards/'+editing,o);closeDrawer();stoast('Saved');await refreshSoc();}
+ catch(e){$('f-err').textContent=e.message;$('f-save').disabled=false;}}
+async function sendReview(){try{const o=readEditor();await sapi('PUT','/cards/'+editing,{...o,reviewed:'Ready to review'});closeDrawer();stoast('Sent to Nick');await refreshSoc();}catch(e){$('f-err').textContent=e.message;}}
+
+function guideHTML(){return `<div class="card guide"><div class="h2">How the social media system works</div><dl>
+ <dt>One place for every video</dt><dd>Each video is one card, from idea to results. Your plan, Nick's dashboard and the analysis all read from it, so nothing gets entered twice.</dd>
+ <dt>Stages and the Complete button</dt><dd>Idea → Needs a shoot date → Filming → Editing → Ready to post → Posted. Hit Complete when a step is done and the video moves on by itself. Completing an idea asks you to make the title specific. Completing "Needs a shoot date" asks for the shoot date. Completing Filming asks what day you'll edit. Completing Editing sends it to Nick and moves it to Ready to post.</dd>
+ <dt>Target post date, always</dt><dd>Every video needs a target post date. Each Complete step asks for it if it's missing and lets you change it if the plan moved.</dd>
+ <dt>Dates make the plan</dt><dd>Shoot, edit and post dates put each step on your Today plan, your "Plan for next shift" and the "This week" view. Next shift is your next scheduled workday. A shoot or edit you don't finish stays on your plan until it's done.</dd>
+ <dt>Nick's review</dt><dd>Edited videos go to Nick automatically. Wait for "Approved" before posting.</dd>
+ <dt>Ideas backlog</dt><dd>New ideas go on the board as Idea. Monday and Thursday have an idea generation block on your plan. Aim for 3 new ideas each time.</dd>
+ <dt>The 7 tags</dt><dd>Content type, People featured, Hook type, Length, Sound, Tone, CTA. One pick each, on every video. Consistent tags are what make the analysis worth anything. Hook and CTA wording go in Notes.</dd>
+ <dt>The number that matters</dt><dd>Reach per post, logged 7 days after posting (your plan reminds you). Guardrail: shares per 1,000 reached. Instagram: View Insights. TikTok: Analytics, then Content. YouTube: Studio, then the Short.</dd>
+ <dt>Boosted posts</dt><dd>If ad money went behind a post, tick Boosted so it's left out when judging what works organically.</dd>
+ <dt>Daily report</dt><dd>Submit Today before you leave, like the front desk does. "What I worked on" and the numbers fill in from every Complete you hit, and "Plan for next shift" fills in from your dates. Add anything the board didn't catch to either list, and remove a line if it's wrong.</dd>
+ <dt>Keep it light</dt><dd>Tagging a video takes about a minute and logging results about two. If tracking ever gets in the way of making content, tell Nick. Getting good content out is the job.</dd></dl></div>
+ <div class="card"><div class="h2">Weekly content mix</div><div class="mix">${['2× Broadcast highlight','Coach tip','Employee highlight','Gear review','Owners vs ___','Member highlight'].map(x=>`<span class="pill p-tag">${x}</span>`).join('')}</div></div>`;}
+</script>
+<script>
+// ===== v5.1: My week + coaching notes from Nick =====
+let PERF=null,perfWeek='this',perfOpen=true;
+try{perfOpen=localStorage.getItem('metro_perf_open')!=='0';}catch(e){}
+async function loadPerf(){PERF=null;$('perf-box').hidden=true;perfWeek='this';
+ try{const r=await fetch('/api/staff/'+sel.id+'/performance?date='+lToday(),{headers:{'x-staff-pin':pin}});if(!r.ok)return;PERF=await r.json();}catch(e){return;}renderPerf();}
+function togglePerf(){perfOpen=!perfOpen;try{localStorage.setItem('metro_perf_open',perfOpen?'1':'0');}catch(e){}renderPerf();}
+function renderPerf(){if(!PERF)return;const w=perfWeek==='this'?PERF.thisWeek:PERF.lastWeek;if(!w)return;const n=PERF.note;
+ const ms=w.metrics.filter(m=>m.goal!=null||m.actual>0);
+ let h=`<div class="perf-h" onclick="togglePerf()"><b>📈 My week${n&&!n.seenAt?' · new note from Nick':''}</b><span class="hint" style="color:var(--muted);font-size:12px">${perfOpen?'Hide':'Show'}</span></div>`;
+ if(perfOpen){h+=`<div class="seg" style="margin:10px 0 4px"><button class="${perfWeek==='this'?'on':''}" onclick="perfWeek='this';renderPerf()">This week</button><button class="${perfWeek==='last'?'on':''}" onclick="perfWeek='last';renderPerf()">Last week</button></div>
+  <div class="muted" style="font-size:12px;margin-bottom:4px">Week of ${pd(w.weekOf)} · ${w.shiftsWorked} shift${w.shiftsWorked===1?'':'s'} checked in${w.tasks.total?' · tasks '+w.tasks.done+' of '+w.tasks.total+' done':''}</div>`;
+  h+=ms.length?ms.map(m=>{if(m.expected==null||m.expected===0)return `<div class="pm"><div class="pm-top"><span>${escS(m.label)}</span><span class="pm-num">${fmtN(m.actual)}</span></div></div>`;
+   const pct=Math.min(100,Math.round(m.actual/m.expected*100)),hit=m.actual>=m.expected,col=hit?'#10b981':pct>=50?'#f59e0b':'#94a3b8';
+   return `<div class="pm"><div class="pm-top"><span>${escS(m.label)}</span><span class="pm-num">${fmtN(m.actual)} of ${fmtN(m.expected)}</span></div><div class="pm-bar"><div style="width:${pct}%;background:${col}"></div></div>
+    <div class="pm-st" style="color:${hit?'#047857':'var(--muted)'}">${hit?'✓ Goal hit':fmtN(m.expected-m.actual)+' to go'} · goal ${fmtN(m.goal)} ${m.cadence==='weekly'?'a week':'a shift'}</div></div>`;}).join(''):'<div class="empty">No numbers yet this week. They show up after your check-ins.</div>';
+  if(n)h+=`<div class="note"><div class="from">From Nick · week of ${pd(n.weekOf)}</div>${n.win?`<div class="win">🙌 ${escS(n.win)}</div>`:''}<div>${escS(n.summary)}</div>${n.questions.length?`<div style="font-weight:700;margin-top:8px">Something to think about</div><ol>${n.questions.map(q=>`<li>${escS(q)}</li>`).join('')}</ol>`:''}</div>`;}
+ $('perf-box').innerHTML=h;$('perf-box').hidden=false;}
+</script>
+</body></html>
