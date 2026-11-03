@@ -102,8 +102,8 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 6px;t
 <div class="wrap">
   <div class="panel active" id="p-team">
     <div class="card" id="cn-card">
-      <div class="row" style="margin-bottom:6px"><div class="h2" style="margin:0">📝 Coaching notes</div><div><button class="btn ghost sm" onclick="cnGuideToggle()">How notes are written</button> <button class="btn sm" onclick="cnNew()">+ Write one</button></div></div>
-      <div class="muted" style="margin-bottom:10px">Claude drafts a weekly note for each person from their numbers. Nobody sees a note until you approve it here. It then shows on their check-in under "My week".</div>
+      <div class="row" style="margin-bottom:6px"><div class="h2" style="margin:0">📝 Management notes</div><div><button class="btn ghost sm" onclick="cnGuideToggle()">How notes are written</button> <button class="btn sm" onclick="cnNew()">+ Write one</button></div></div>
+      <div class="muted" style="margin-bottom:10px">Claude drafts a weekly note for each person every Monday. Nobody sees a note until you approve it here. It then shows on their check-in under "My week" and stays there until the next one is sent. "Take back" pulls a sent note down, and their previous note shows again.</div>
       <div id="cn-guide" class="cn-guide" style="display:none"></div><div id="cn-new"></div><div id="cn-list"><div class="muted">Loading…</div></div>
     </div>
     <div class="card">
@@ -449,7 +449,7 @@ async function saveWorkdays(empId){const w=[...document.querySelectorAll('#e-wor
  await fetch('/api/manager/employees/'+empId+'/workdays',{method:'PUT',headers:H(),body:JSON.stringify({workdays:w})});workdays[empId]=w;}
 </script>
 <script>
-// ===== v5.1: coaching notes (draft -> Nick approves) =====
+// ===== v5.1: management notes (draft -> Nick approves) =====
 let NOTES=[],cnGuide='',cnShowAll=false;
 async function loadNotes(){try{const r=await GET('/api/manager/notes');NOTES=r.notes;cnGuide=r.guide;}catch(e){NOTES=[];}renderNotes();}
 function cnGuideToggle(){const g=$('cn-guide');g.textContent=cnGuide;g.style.display=g.style.display==='none'?'block':'none';}
@@ -458,12 +458,14 @@ async function cnPerfHTML(empId,weekOf){try{const p=await GET('/api/manager/empl
 async function renderNotes(){const drafts=NOTES.filter(n=>n.status==='draft');const done=NOTES.filter(n=>n.status!=='draft');
  let h=drafts.length?'':'<div class="muted" style="margin-bottom:8px">No drafts waiting on you.</div>';
  for(const n of drafts){h+=`<div class="cn" id="cn-${n.id}"><div class="cn-h"><b>${escapeHtml(n.name)}</b><span class="muted">week of ${n.weekOf} · drafted by ${n.author==='claude'?'Claude':'you'}</span></div>${await cnPerfHTML(n.employeeId,n.weekOf)}
-  <span class="lbl">Win</span><input class="in" id="cw-${n.id}" value="${escapeHtml(n.win)}"><span class="lbl">Note</span><textarea class="in" rows="3" id="cs-${n.id}">${escapeHtml(n.summary)}</textarea>
+  ${n.forNick?`<div class="cn-perf" style="background:#fef3c7"><b>For you only (staff never see this)</b><div style="display:block;white-space:pre-wrap">${escapeHtml(n.forNick)}</div></div>`:''}<span class="lbl">Win</span><input class="in" id="cw-${n.id}" value="${escapeHtml(n.win)}"><span class="lbl">Note</span><textarea class="in" rows="3" id="cs-${n.id}">${escapeHtml(n.summary)}</textarea>
   <span class="lbl">Questions (one per line)</span><textarea class="in" rows="3" id="cq-${n.id}">${escapeHtml(n.questions.join('\n'))}</textarea>
   <button class="btn sm" onclick="cnSet('${n.id}','approved')">Approve &amp; send</button> <button class="btn ghost sm" onclick="cnSet('${n.id}','draft')">Save edits</button> <button class="btn ghost sm" onclick="cnSet('${n.id}','returned')">Don't send</button></div>`;}
  if(done.length){h+=`<div class="row" style="margin:10px 0 4px"><span class="lbl" style="margin:0">History</span><button class="btn ghost sm" onclick="cnShowAll=!cnShowAll;renderNotes()">${cnShowAll?'Show less':'Show all'}</button></div>`;
-  h+=(cnShowAll?done:done.slice(0,3)).map(n=>`<div class="rep" style="${n.status==='returned'?'opacity:.55':''}"><div class="rep-msg">${escapeHtml(n.summary)}</div><div class="rep-meta"><b>${escapeHtml(n.name)}</b> · week of ${n.weekOf} · ${n.status==='approved'?(n.seenAt?'✓ sent, seen':'✓ sent, not seen yet'):'not sent'}</div></div>`).join('');}
+  h+=(cnShowAll?done:done.slice(0,3)).map(n=>`<div class="rep" style="${n.status!=='approved'?'opacity:.55':''}"><div class="rep-msg">${escapeHtml(n.summary)}</div><div class="rep-meta"><b>${escapeHtml(n.name)}</b> · week of ${n.weekOf} · ${n.status==='approved'?(n.seenAt?'✓ sent, seen':'✓ sent, not seen yet')+` · <a href="#" onclick="cnTakeBack('${n.id}',this);return false" style="color:var(--red);font-weight:700">take back</a>`:n.status==='withdrawn'?'taken back':'not sent'}</div></div>`).join('');}
  $('cn-list').innerHTML=h;}
+async function cnTakeBack(id,a){if(a.dataset.armed!=='1'){a.dataset.armed='1';a.textContent='tap again to take back';setTimeout(()=>{a.dataset.armed='';a.textContent='take back';},3000);return;}
+ await fetch('/api/manager/notes/'+id,{method:'PUT',headers:H(),body:JSON.stringify({status:'withdrawn'})});loadNotes();}
 async function cnSet(id,status){const body={status,win:$('cw-'+id).value,summary:$('cs-'+id).value,questions:$('cq-'+id).value.split('\n')};
  if(status==='approved'&&!body.summary.trim())return alert('The note is empty.');
  await fetch('/api/manager/notes/'+id,{method:'PUT',headers:H(),body:JSON.stringify(body)});loadNotes();}

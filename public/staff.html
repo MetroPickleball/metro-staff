@@ -391,7 +391,7 @@ function guideHTML(){return `<div class="card guide"><div class="h2">How the soc
  <div class="card"><div class="h2">Weekly content mix</div><div class="mix">${['2× Broadcast highlight','Coach tip','Employee highlight','Gear review','Owners vs ___','Member highlight'].map(x=>`<span class="pill p-tag">${x}</span>`).join('')}</div></div>`;}
 </script>
 <script>
-// ===== v5.1: My week + coaching notes from Nick =====
+// ===== v5.1: My week + management notes from Nick =====
 let PERF=null,perfWeek='this',perfOpen=true;
 try{perfOpen=localStorage.getItem('metro_perf_open')!=='0';}catch(e){}
 async function loadPerf(){PERF=null;$('perf-box').hidden=true;perfWeek='this';
