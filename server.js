@@ -483,7 +483,7 @@ function authPage(p,msg){const hidden=Object.entries(p).map(([k,v])=>`<input typ
 .no{color:#b91c1c}input[type=password]{width:100%;padding:11px;border:2px solid #e2e8f0;border-radius:9px;font-size:16px;box-sizing:border-box}button{width:100%;padding:13px;border:none;border-radius:10px;background:#00AEAE;color:#fff;font-size:15px;font-weight:700;margin-top:10px;cursor:pointer}
 .err{color:#b91c1c;font-size:13px;margin-top:8px}.m{color:#64748b;font-size:12px}</style></head><body><div class="c"><div class="logo">METRO<br>PICKLEBALL</div>
 <h1>Connect Claude to the staff portal?</h1><p class="m">Only approve this if you just clicked Connect in Claude yourself.</p>
-<ul><li>Read the team, check-ins, reports, metrics and the social media board</li><li>Make manager changes: tasks and metrics, banners, check-in notes, report status, social media videos</li><li>Draft coaching notes for staff (you approve every one before anyone sees it)</li>
+<ul><li>Read the team, check-ins, reports, metrics and the social media board</li><li>Make manager changes: tasks and metrics, banners, check-in notes, report status, social media videos</li><li>Draft management notes for staff (you approve every one before anyone sees it)</li>
 <li class="no">Never delete anything, change employees or PINs, or download the database</li></ul>
 <form method="post" action="/oauth/authorize">${hidden}<label class="m" for="pin">Manager PIN</label><input type="password" id="pin" name="pin" autocomplete="current-password" autofocus required>
 <button type="submit">Approve</button></form>${msg?`<div class="err">${escH(msg)}</div>`:''}<p class="m" style="margin-top:14px">You can disconnect Claude any time from the manager dashboard, Social tab.</p></div></body></html>`;}
@@ -597,10 +597,10 @@ const TOOLS=[
 ];
 
 // ===================================================================
-// v5.1: "My week" performance for every employee + coaching notes.
+// v5.1: "My week" performance for every employee + management notes.
 // Claude (or Nick) drafts a note; staff only ever see notes Nick approved.
 // ===================================================================
-const COACHING_GUIDE=`How coaching notes to Metro staff are written (Nick's rules):
+const COACHING_GUIDE=`How management notes to Metro staff are written (Nick's rules):
 1. The numbers are cut and dry. State what they did against what's expected, plainly ("2 of 3 membership sales this week"). No softening, no spin, no padding.
 2. Everything around the numbers is motivational, insightful and encouraging. Open with one specific, real win from their week.
 3. Never micromanage or diminish their work. No task-by-task instructions, no "you should have", no comparing them to coworkers, nothing about pay or discipline.
@@ -609,6 +609,7 @@ const COACHING_GUIDE=`How coaching notes to Metro staff are written (Nick's rule
 6. Only use their own data. If a number looks off or there is no data, say so kindly or leave it out rather than guess.`;
 db.exec(`CREATE TABLE IF NOT EXISTS perf_notes(id TEXT PRIMARY KEY,employee_id TEXT,week_of TEXT,win TEXT,summary TEXT,questions TEXT DEFAULT '[]',
  status TEXT DEFAULT 'draft',author TEXT DEFAULT 'claude',created_at TEXT DEFAULT (datetime('now')),approved_at TEXT,seen_at TEXT);`);
+try{db.exec("ALTER TABLE perf_notes ADD COLUMN for_nick TEXT DEFAULT ''");}catch(e){}
 function perfFor(empId,anchor){const emp=db.prepare('SELECT * FROM employees WHERE id=?').get(empId);if(!emp)return null;
  const g=J(emp.groups);const dates=weekDates(okDate(anchor)?anchor:localToday());const inC=dates.map(()=>'?').join(',');
  const rows=db.prepare(`SELECT item_id,date,value FROM daily_entries WHERE employee_id=? AND date IN (${inC})`).all(empId,...dates);
@@ -622,43 +623,45 @@ function perfFor(empId,anchor){const emp=db.prepare('SELECT * FROM employees WHE
    metrics.push({label:it.label,actual,expected,goal:it.goal,cadence:it.cadence,highPriority:!!it.high_priority});}
   else if(k.includes('task')&&it.cadence==='daily'){ent.forEach(r=>{tTot++;if(r.value>=1)tDone++;});}});
  return {weekOf:dates[0],weekEnd:dates[6],shiftsWorked,metrics,tasks:{done:tDone,total:tTot}};}
-const noteOut=n=>n&&({id:n.id,employeeId:n.employee_id,weekOf:n.week_of,win:n.win||'',summary:n.summary||'',questions:J(n.questions),status:n.status,author:n.author,createdAt:n.created_at,approvedAt:n.approved_at,seenAt:n.seen_at});
+const noteOut=n=>n&&({id:n.id,employeeId:n.employee_id,weekOf:n.week_of,win:n.win||'',summary:n.summary||'',questions:J(n.questions),status:n.status,author:n.author,createdAt:n.created_at,approvedAt:n.approved_at,seenAt:n.seen_at,forNick:n.for_nick||''});
 function draftNote(p,author){const emp=db.prepare('SELECT id FROM employees WHERE id=? AND active=1').get(p.employee_id);if(!emp)return {error:'No such employee'};
  const summary=String(p.summary||'').trim();if(!summary)return {error:'summary required'};
  const qs=(Array.isArray(p.questions)?p.questions:[]).map(q=>String(q).trim()).filter(Boolean).slice(0,3);
  const id='n'+uid();const wk=okDate(p.week_of)?weekDates(p.week_of)[0]:weekDates(localToday())[0];
- db.prepare('INSERT INTO perf_notes(id,employee_id,week_of,win,summary,questions,status,author) VALUES(?,?,?,?,?,?,?,?)')
-  .run(id,emp.id,wk,String(p.win||'').trim().slice(0,600),summary.slice(0,1500),JSON.stringify(qs.map(q=>q.slice(0,300))),'draft',author);
+ db.prepare('INSERT INTO perf_notes(id,employee_id,week_of,win,summary,questions,status,author,for_nick) VALUES(?,?,?,?,?,?,?,?,?)')
+  .run(id,emp.id,wk,String(p.win||'').trim().slice(0,600),summary.slice(0,1500),JSON.stringify(qs.map(q=>q.slice(0,300))),'draft',author,String(p.for_nick||'').trim().slice(0,3000));
  return {note:noteOut(db.prepare('SELECT * FROM perf_notes WHERE id=?').get(id))};}
 // staff: their own week + the latest note Nick approved
 app.get('/api/staff/:id/performance',(req,res)=>{if(!staffOk(req.params.id,req.headers['x-staff-pin']))return res.status(401).json({error:'PIN required'});
  const today=okDate(req.query.date)?req.query.date:localToday();
  const note=db.prepare("SELECT * FROM perf_notes WHERE employee_id=? AND status='approved' ORDER BY approved_at DESC LIMIT 1").get(req.params.id);
  if(note&&!note.seen_at)db.prepare("UPDATE perf_notes SET seen_at=datetime('now') WHERE id=?").run(note.id);
- res.json({thisWeek:perfFor(req.params.id,today),lastWeek:perfFor(req.params.id,addDaysISO(today,-7)),note:noteOut(note)});});
+ const pub=noteOut(note);if(pub)delete pub.forNick;
+ res.json({thisWeek:perfFor(req.params.id,today),lastWeek:perfFor(req.params.id,addDaysISO(today,-7)),note:pub});});
 // manager: review queue + history, approve / edit / send back, or write one yourself
 app.get('/api/manager/notes',requireManager,(req,res)=>{const rows=db.prepare(`SELECT p.*,e.name FROM perf_notes p JOIN employees e ON e.id=p.employee_id ORDER BY p.created_at DESC LIMIT 60`).all();
  res.json({guide:COACHING_GUIDE,notes:rows.map(r=>({...noteOut(r),name:r.name}))});});
 app.get('/api/manager/employee/:id/performance',requireManager,(req,res)=>res.json(perfFor(req.params.id,req.query.date)));
 app.post('/api/manager/notes',requireManager,(req,res)=>{const r=draftNote(req.body||{},'nick');if(r.error)return res.status(400).json(r);res.json(r);});
 app.put('/api/manager/notes/:nid',requireManager,(req,res)=>{const cur=db.prepare('SELECT * FROM perf_notes WHERE id=?').get(req.params.nid);if(!cur)return res.status(404).json({error:'no'});
- const b=req.body||{};const st=b.status||cur.status;if(!['draft','approved','returned'].includes(st))return res.status(400).json({error:'bad status'});
+ const b=req.body||{};const st=b.status||cur.status;if(!['draft','approved','returned','withdrawn'].includes(st))return res.status(400).json({error:'bad status'});
  const qs=Array.isArray(b.questions)?JSON.stringify(b.questions.map(q=>String(q).trim()).filter(Boolean).slice(0,3)):cur.questions;
  db.prepare(`UPDATE perf_notes SET win=?,summary=?,questions=?,status=?,approved_at=CASE WHEN ?='approved' AND status!='approved' THEN datetime('now') ELSE approved_at END WHERE id=?`)
   .run(b.win!==undefined?String(b.win).slice(0,600):cur.win,b.summary!==undefined?String(b.summary).slice(0,1500):cur.summary,qs,st,st,req.params.nid);
  res.json({ok:true});});
 TOOLS.push(
- {name:'get_performance',read:true,description:'One employee\'s week: each tracked number against what is expected (goal per week, or daily goal x shifts worked), shifts worked and task completion. Use before drafting a coaching note.',
+ {name:'get_performance',read:true,description:'One employee\'s week: each tracked number against what is expected (goal per week, or daily goal x shifts worked), shifts worked and task completion. Use before drafting a management note.',
   inputSchema:{type:'object',properties:{employee_id:S_ID,week_of:{...D,description:'Any date in the week (default this week)'}},required:['employee_id']},
   run:a=>{const p=perfFor(a.employee_id,a.week_of);if(!p)throw new Error('No such employee');return {...p,previousWeek:perfFor(a.employee_id,addDaysISO(p.weekOf,-7))};}},
- {name:'get_coaching_notes',read:true,description:'Coaching notes already drafted, approved or sent back, so new notes build on what was said before.',
-  inputSchema:{type:'object',properties:{employee_id:S_ID,status:{type:'string',enum:['draft','approved','returned']}}},
+ {name:'get_management_notes',read:true,description:'Management notes already drafted, approved or sent back, so new notes build on what was said before.',
+  inputSchema:{type:'object',properties:{employee_id:S_ID,status:{type:'string',enum:['draft','approved','returned','withdrawn']}}},
   run:a=>db.prepare('SELECT p.*,e.name FROM perf_notes p JOIN employees e ON e.id=p.employee_id ORDER BY p.created_at DESC LIMIT 100').all()
    .filter(r=>(!a.employee_id||r.employee_id===a.employee_id)&&(!a.status||r.status===a.status)).map(r=>({...noteOut(r),name:r.name}))},
- {name:'draft_coaching_note',description:'Draft a weekly coaching note for one employee. It is saved as a DRAFT for Nick to approve; the employee sees nothing until he does. Follow these rules exactly:\n'+COACHING_GUIDE,
+ {name:'draft_management_note',description:'Draft a weekly management note for one employee. It is saved as a DRAFT for Nick to approve; the employee sees nothing until he does. Follow these rules exactly:\n'+COACHING_GUIDE,
   inputSchema:{type:'object',properties:{employee_id:S_ID,week_of:D,win:{type:'string',description:'One specific, real win from their week'},summary:{type:'string',description:'Up to 3 sentences, first person as Nick, numbers stated plainly'},
-   questions:{type:'array',items:{type:'string'},description:'2 or 3 open questions'}},required:['employee_id','summary','questions']},
-  run:a=>{const r=draftNote(a,'claude');if(r.error)throw new Error(r.error);return {...r.note,status:'draft (waiting on Nick)'};},sum:a=>'Drafted coaching note for '+a.employee_id});
+   questions:{type:'array',items:{type:'string'},description:'2 or 3 open questions'},
+   for_nick:{type:'string',description:'PRIVATE, shown only to Nick on the draft, never to the employee: anything that did not line up (e.g. sales logged vs CourtReserve, schedule mismatches), context, or what to watch. Plain and short.'}},required:['employee_id','summary','questions']},
+  run:a=>{const r=draftNote(a,'claude');if(r.error)throw new Error(r.error);return {...r.note,status:'draft (waiting on Nick)'};},sum:a=>'Drafted management note for '+a.employee_id});
 
 const TOOL_MAP=Object.fromEntries(TOOLS.map(t=>[t.name,t]));
 const MCP_VERSIONS=['2025-06-18','2025-03-26','2024-11-05'];
@@ -666,7 +669,7 @@ function mcpHandle(msg){const {id,method,params}=msg||{};const reply=result=>({j
  if(id===undefined||id===null)return null; // notification
  if(method==='initialize'){const v=params&&MCP_VERSIONS.includes(params.protocolVersion)?params.protocolVersion:MCP_VERSIONS[0];
   return reply({protocolVersion:v,capabilities:{tools:{listChanged:false}},serverInfo:{name:'metro-staff-portal',version:'5.1.0'},
-   instructions:'Metro Pickleball staff portal. Read team check-ins, reports, metrics and the social media board; make manager changes. Nothing can be deleted. Dates are YYYY-MM-DD, Eastern time. Coaching notes are drafts until Nick approves them in the manager dashboard.\n\n'+COACHING_GUIDE});}
+   instructions:'Metro Pickleball staff portal. Read team check-ins, reports, metrics and the social media board; make manager changes. Nothing can be deleted. Dates are YYYY-MM-DD, Eastern time. Management notes are drafts until Nick approves them in the manager dashboard.\n\n'+COACHING_GUIDE});}
  if(method==='ping')return reply({});
  if(method==='tools/list')return reply({tools:TOOLS.map(t=>({name:t.name,description:t.description,inputSchema:t.inputSchema,annotations:{readOnlyHint:!!t.read,destructiveHint:false}}))});
  if(method==='tools/call'){const t=TOOL_MAP[params&&params.name];if(!t)return fail(-32602,'Unknown tool');const a=(params&&params.arguments)||{};
