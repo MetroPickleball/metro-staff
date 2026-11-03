@@ -65,6 +65,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .pm-num{font-weight:800;white-space:nowrap}.pm-bar{height:7px;background:#eef2f6;border-radius:4px;margin-top:5px;overflow:hidden}.pm-bar div{height:100%;border-radius:4px}
 .pm-st{font-size:11px;font-weight:700;margin-top:3px}.note{background:var(--teal-l);border-radius:10px;padding:12px;margin-top:12px;font-size:14px;line-height:1.5}
 .note .win{font-weight:700;margin-bottom:4px}.note ol{margin:6px 0 0;padding-left:20px}.note .from{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--teal-d);margin-bottom:6px}
+.skip-link{background:none;border:none;color:var(--muted);font-size:11px;font-weight:600;text-decoration:underline;cursor:pointer;padding:2px 0 0 32px;font-family:inherit}
+.cbtn.ghosty{background:none;color:var(--muted);border:none;text-decoration:underline;font-weight:600;padding:6px 4px}
+.danger{background:#fee2e2;color:#b91c1c;border:none;border-radius:10px;padding:12px;font-weight:700;width:100%;cursor:pointer;font-family:inherit;margin-top:10px}
 [hidden]{display:none!important}
 .subtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--card);padding:5px;border-radius:12px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
 .subtabs button{border:none;background:none;padding:10px 6px;border-radius:9px;font-weight:700;font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit}
@@ -211,7 +214,7 @@ function itemRow(it,sv,st){
   const one=it.cadence==='onetime'?'<span class="badge">one-time</span> ':'';
   const isTask=it.kinds.includes('task'),isNum=it.kinds.includes('number'),isText=it.kinds.includes('text');
   let main;
-  if(isTask){const done=sv==1?'done':'';main=`<div class="sitem task ${done}" data-id="${it.id}" data-task="1" onclick="this.classList.toggle('done');persistDraft()"><div class="ck">✓</div><div class="ilabel">${pri}${one}${it.label}</div></div>`;}
+  if(isTask){const done=sv==1?'done':'';main=`<div class="sitem task ${done}" data-id="${it.id}" data-task="1" onclick="this.classList.toggle('done');persistDraft()"><div class="ck">✓</div><div class="ilabel">${pri}${one}${it.label}</div></div><button class="skip-link" onclick="skipTask('${it.id}')">Didn't do it</button>`;}
   else{const goal=it.goal!=null?` <span class="igoal">(goal ${it.goal})</span>`:'';const ctl=isNum?`<input class="numin" type="number" inputmode="numeric" min="0" data-id="${it.id}" data-num="1" value="${sv!=null&&sv!==''?sv:''}" placeholder="0" oninput="persistDraft()">`:'';main=`<div class="sitem"><div class="ilabel">${pri}${one}${it.label}${goal}</div>${ctl}</div>`;}
   const extra=isText?`<input class="txtin" data-id="${it.id}" data-text="1" placeholder="${esc(it.text_label||'Type here…')}" value="${esc(st||'')}" oninput="persistDraft()">`:'';
   return `<div class="itemwrap">${main}${extra}</div>`;}
@@ -279,10 +282,12 @@ function pills(c){let h='';if(c.reviewed==='Ready to review'&&c.stage!=='Posted'
 
 function renderSocToday(){const T=lToday();const steps=stepsFor(T,true);
  SOC.cards.filter(needsResults).forEach(c=>{if(!steps.find(s=>s.type==='Results'&&s.c===c))steps.push({type:'Results',c,late:true});});
- const done=SOC.activity.filter(a=>a.kind!=='idea-added');const late=SOC.cards.filter(isLate);
+ const done=SOC.activity.filter(a=>!['idea-added','skipped','archived'].includes(a.kind));const late=SOC.cards.filter(isLate);
+ const skippedIds=new Set(SOC.activity.filter(a=>a.kind==='skipped').map(a=>a.cardId));for(let i=steps.length-1;i>=0;i--)if(steps[i].c&&skippedIds.has(steps[i].c.id))steps.splice(i,1);
  let h=steps.length||done.length?'':'<div class="empty">Nothing dated for today. Open Content and hit Complete on the next video to give it a date.</div>';
  h+=steps.map(s=>{const b=s.type==='Ideas'?`<button class="cbtn alt" onclick="socTab('board');newIdea()">+ Idea</button>`:s.type==='Results'?`<button class="cbtn" onclick="openCard('${s.c.id}',true)">Log</button>`:`<button class="cbtn" onclick="completeFlow('${s.c.id}')">Complete</button>`;
-  return `<div class="itemwrap"><div class="sitem"><div class="ilabel"><span class="step s-${s.type}">${s.type}</span>${escS(stepText(s))}${s.late?'<span class="late-tag">late</span>':''}</div>${b}</div></div>`;}).join('');
+  const sk=s.c?`<button class="cbtn ghosty" onclick="skipStep('${s.c.id}','${s.type}')">Didn't do</button>`:'';
+  return `<div class="itemwrap"><div class="sitem"><div class="ilabel"><span class="step s-${s.type}">${s.type}</span>${escS(stepText(s))}${s.late?'<span class="late-tag">late</span>':''}</div>${sk}${b}</div></div>`;}).join('');
  h+=done.map(a=>`<div class="itemwrap"><div class="sitem task done"><div class="ck">✓</div><div class="ilabel">${escS(a.text)}</div></div></div>`).join('');
  if(late.length)h+=`<div class="itemwrap"><div class="ilabel" style="color:#dc2626;font-size:13px;font-weight:700">⚠ ${late.length} video${late.length>1?'s are':' is'} past the target post date and not marked posted. <button class="more" onclick="socTab('board')">Open board →</button></div></div>`;
  $('soc-plan-list').innerHTML=h;
@@ -365,7 +370,8 @@ function drawEditor(c,focusResults){const isNew=c.id==='new';const si=STAGES.ind
   <div class="fgrid"><div><label class="lbl" for="f-reach">Reach (7-day)</label><input class="in" type="number" min="0" id="f-reach" value="${c.reach??''}"></div>
   <div><label class="lbl" for="f-shares">Shares</label><input class="in" type="number" min="0" id="f-shares" value="${c.shares??''}"></div></div></div>
  <div class="card"><label class="lbl" for="f-notes">Notes (hook / CTA wording, angle, permissions)</label><textarea class="txtin" id="f-notes" rows="3">${escS(c.notes)}</textarea></div>
- <button class="submit-btn" id="f-save" onclick="saveCard()">Save</button><p class="err" id="f-err"></p>`;
+ <button class="submit-btn" id="f-save" onclick="saveCard()">Save</button><p class="err" id="f-err"></p>
+ ${isNew?'':`<button class="danger" onclick="archiveFlow('${c.id}')">Archive this video (take it off the board)</button>`}`;
  $('scrim').hidden=false;if(focusResults)setTimeout(()=>{$('res-card').scrollIntoView();$('f-reach').focus();},60);else if(isNew)setTimeout(()=>$('f-title').focus(),60);}
 function pickStage(b){b.parentNode.querySelectorAll('button').forEach(x=>x.classList.remove('on','past'));b.classList.add('on');let p=b.previousElementSibling;while(p){p.classList.add('past');p=p.previousElementSibling;}}
 function readEditor(){const o={title:$('f-title').value.trim(),filmDate:$('f-film').value||null,editDate:$('f-edit').value||null,postDate:$('f-post').value||null,postedDate:$('f-posted').value||null,
@@ -408,5 +414,26 @@ function renderPerf(){if(!PERF)return;const w=perfWeek==='this'?PERF.thisWeek:PE
     <div class="pm-st" style="color:${hit?'#047857':'var(--muted)'}">${hit?'✓ Goal hit':fmtN(m.expected-m.actual)+' to go'} · goal ${fmtN(m.goal)} ${m.cadence==='weekly'?'a week':'a shift'}</div></div>`;}).join(''):'<div class="empty">No numbers yet this week. They show up after your check-ins.</div>';
   if(n)h+=`<div class="note"><div class="from">From Nick · week of ${pd(n.weekOf)}</div>${n.win?`<div class="win">🙌 ${escS(n.win)}</div>`:''}<div>${escS(n.summary)}</div>${n.questions.length?`<div style="font-weight:700;margin-top:8px">Something to think about</div><ol>${n.questions.map(q=>`<li>${escS(q)}</li>`).join('')}</ol>`:''}</div>`;}
  $('perf-box').innerHTML=h;$('perf-box').hidden=false;}
+</script>
+<script>
+// ===== v5.4: "Didn't do it" with a reason, and archive with a reason =====
+function reasonForm(title,sub,extra,go){$('drawer').innerHTML=`<div class="row-b"><span class="h2">${title}</span><button class="cbtn alt" onclick="closeDrawer()">Cancel</button></div>
+ <div class="card"><div style="font-weight:700;margin-bottom:6px">${sub}</div><label class="lbl" for="rs-why">Why? (Nick sees this)</label>
+ <textarea class="txtin" id="rs-why" rows="3" placeholder="e.g. Holly cancelled, rescheduling for Friday"></textarea>${extra||''}</div>
+ <button class="submit-btn" id="rs-go">Save</button><p class="err" id="rs-err"></p>`;$('rs-go').onclick=go;$('scrim').hidden=false;setTimeout(()=>$('rs-why').focus(),50);}
+function skipTask(itemId){const it=cur&&cur.items.find(x=>x.id===itemId);if(!it)return;
+ reasonForm("Didn't do it",escS(it.label),'<p class="hintline">It comes off today\'s list and the reason goes in your check-in.</p>',async()=>{const why=$('rs-why').value.trim();if(why.length<3){$('rs-err').textContent='Please add a short reason.';return;}
+  $('rs-go').disabled=true;const r=await fetch('/api/staff/'+sel.id+'/skip',{method:'POST',headers:{'Content-Type':'application/json','x-staff-pin':pin},body:JSON.stringify({source:'task',item_id:itemId,reason:why,date:todayISO()})});
+  if(!r.ok){const j=await r.json().catch(()=>({}));$('rs-err').textContent=j.error||'Could not save.';$('rs-go').disabled=false;return;}
+  persistDraft();closeDrawer();stoast('Logged. Taken off today\'s list.');loadToday();});}
+function skipStep(cardId,type){const c=card(cardId);if(!c)return;const col={Film:'filmDate',Edit:'editDate',Post:'postDate'}[type];
+ reasonForm("Didn't do it",escS(type+': '+c.title),col?`<label class="lbl" for="rs-date" style="margin-top:10px">New ${type==='Post'?'target post':type.toLowerCase()} date (optional)</label><input class="in" type="date" id="rs-date" min="${lToday()}"><p class="hintline">Leave it blank and it stays on your plan as late.</p>`:'',
+  async()=>{const why=$('rs-why').value.trim();if(why.length<3){$('rs-err').textContent='Please add a short reason.';return;}$('rs-go').disabled=true;
+   const r=await fetch('/api/staff/'+sel.id+'/skip',{method:'POST',headers:{'Content-Type':'application/json','x-staff-pin':pin},body:JSON.stringify({source:'social',card_id:cardId,step:type,reason:why,new_date:($('rs-date')||{}).value||'',date:lToday()})});
+   if(!r.ok){const j=await r.json().catch(()=>({}));$('rs-err').textContent=j.error||'Could not save.';$('rs-go').disabled=false;return;}
+   closeDrawer();stoast('Logged.');refreshSoc();});}
+function archiveFlow(cardId){const c=card(cardId);if(!c)return;
+ reasonForm('Archive video',escS(c.title),'<p class="hintline">It comes off the board. Nick can bring it back if needed.</p>',async()=>{const why=$('rs-why').value.trim();if(why.length<3){$('rs-err').textContent='Please add a short reason.';return;}
+  $('rs-go').disabled=true;try{await sapi('POST','/cards/'+cardId+'/archive',{reason:why});closeDrawer();stoast('Archived');refreshSoc();}catch(e){$('rs-err').textContent=e.message;$('rs-go').disabled=false;}});}
 </script>
 </body></html>
